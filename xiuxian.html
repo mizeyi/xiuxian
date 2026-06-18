@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>仙途 · 法宝与修为修复</title>
+    <title>仙途 · 生命值修复完整版</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         html, body { height:100%; overflow:hidden; background:#0a0f1e; font-family:"Noto Serif SC","KaiTi",serif; }
@@ -297,7 +297,6 @@
         if (state.partner) atk += state.partner.attackBonus;
         const equipped = getEquippedTreasure();
         if (equipped) {
-            // 法宝威能随境界提升：基础攻击力 + 境界 * 2
             atk += equipped.atk + state.realmIndex * 2;
         }
         atk += state.manuals.atk.bonus;
@@ -309,10 +308,14 @@
             state.maxAge = Infinity;
         }
         state.maxHp = Math.floor(realm.hpBase * (1 + state.subRealm * 0.12));
+        if (!isFinite(state.maxHp) || state.maxHp <= 0) state.maxHp = 80;
+        if (!isFinite(state.spirit)) state.spirit = 100;
         if (state.spirit > state.maxSpirit) state.spirit = state.maxSpirit;
+        if (!isFinite(state.hp)) state.hp = state.maxHp;
         if (state.hp > state.maxHp) state.hp = state.maxHp;
-        if (!isFinite(state.maxAge)) state.age = Math.min(state.age, state.maxAge);
-        else if (state.age > state.maxAge) state.age = state.maxAge;
+        if (!isFinite(state.age)) state.age = 20;
+        if (!isFinite(state.maxAge)) state.maxAge = 100;
+        if (state.age > state.maxAge) state.age = state.maxAge;
     }
 
     function getEquippedTreasure() {
@@ -325,10 +328,8 @@
         return state.subRealm >= 2 ? Infinity : REALMS[state.realmIndex].subCost[state.subRealm];
     }
 
-    // 修复：大境界突破需求改为小境界后期需求的 1.5 倍
     function getBreakNeed() {
-        const subCosts = REALMS[state.realmIndex].subCost;
-        const lateCost = subCosts[subCosts.length - 1] || 100; // 后期需求
+        const lateCost = REALMS[state.realmIndex].subCost[1] || 100;
         return Math.floor(lateCost * 1.5);
     }
 
@@ -421,7 +422,7 @@
                 state.spiritualRoot = Object.keys(ROOTS)[Math.floor(Math.random()*5)];
                 state.baseBreakRate = 5 + Math.floor(Math.random()*16);
                 state.realmIndex = 0; state.subRealm = 0; state.cultivation = 0;
-                state.age = 20; state.ageReduction = 0; state.maxAge = 100; state.hp = 80;
+                state.age = 20; state.ageReduction = 0; state.maxAge = 100; state.hp = 80; state.maxHp = 80;
                 hideModal();
                 generateMonsters(); recalcStats(); state.hp = state.maxHp;
                 updateUI(); saveGame();
@@ -458,7 +459,6 @@
         state.hp = state.maxHp;
     }
 
-    // 修改：防止重复法宝
     function addTreasure(t) {
         const existing = state.treasures.find(tr => tr.name === t.name);
         if (existing) {
@@ -491,7 +491,6 @@
         });
         document.getElementById('confirmTreasureBtn').addEventListener('click', hideModal);
     }
-
     const eventPool = {
         cultivate: [
             { desc:"灵气逆乱", opts:[
@@ -812,7 +811,6 @@
         if (!consumeYears(1.2)) return;
         updateUI();
     }
-
     function buyBreakPill(){ if(state.stones<30||state.breakPillUsed>=3) return; state.stones-=30; state.breakPillUsed++; state.breakBoost = Math.min(100, state.breakBoost+10); addLog("破境丹，突破率+10%"); updateUI(); }
     function buySpiritPill(){ if(state.stones<15) return; state.stones-=15; state.spirit=Math.min(state.maxSpirit,state.spirit+40); addLog("回灵丹"); updateUI(); }
     function buyLifeFruit(){ if(state.stones<500) return; state.stones-=500; state.lifeFruitBonus = (state.lifeFruitBonus||0)+8; recalcStats(); addLog("寿元上限+8"); updateUI(); }
@@ -849,10 +847,10 @@
         document.getElementById('panel'+scene.charAt(0).toUpperCase()+scene.slice(1)).classList.add('active');
     }
 
-    function saveGame() { try{ localStorage.setItem('xiuxian_v11', JSON.stringify(state)); } catch(e){} }
+    function saveGame() { try{ localStorage.setItem('xiuxian_v12', JSON.stringify(state)); } catch(e){} }
     function loadGame() {
         try {
-            const s = localStorage.getItem('xiuxian_v11');
+            const s = localStorage.getItem('xiuxian_v12');
             if(s) {
                 state = JSON.parse(s);
                 if(!state.treasures) state.treasures=[];
@@ -867,8 +865,13 @@
                 if(!state.gender) state.gender='male';
                 if(state.realmIndex<0||state.realmIndex>=REALMS.length) { state.realmIndex=0; state.subRealm=0; }
                 if(!state.monsters?.length) generateMonsters();
+                if(!isFinite(state.maxHp) || state.maxHp <= 0) { state.maxHp = REALMS[state.realmIndex].hpBase; }
+                if(!isFinite(state.hp) || state.hp <= 0) { state.hp = state.maxHp; }
+                if(state.hp > state.maxHp) state.hp = state.maxHp;
+                if(!isFinite(state.age)) state.age = 20;
+                if(!isFinite(state.maxAge)) state.maxAge = 100;
+                if(state.age > state.maxAge) state.age = state.maxAge;
                 recalcStats();
-                if(state.hp>state.maxHp) state.hp=state.maxHp;
                 addLog("读档成功");
             } else { startNewGame(); return; }
         } catch(e) { startNewGame(); return; }
@@ -968,7 +971,7 @@
 
     function init() {
         bindEvents();
-        if (!localStorage.getItem('xiuxian_v11')) { startNewGame(); }
+        if (!localStorage.getItem('xiuxian_v12')) { startNewGame(); }
         else { loadGame(); }
         switchScene('cave');
     }

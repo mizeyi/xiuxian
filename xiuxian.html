@@ -3,88 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>仙途 · 最终完整版</title>
+    <title>仙途 · 界面优化版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; background: #0a0f1e; font-family: "Noto Serif SC", "KaiTi", serif; }
         body { display: flex; justify-content: center; align-items: center; padding: 0.5rem; color: #e5d5b0; }
+        
         .game-container {
-            width: 100%; max-width: 520px; height: 100%; background: rgba(20, 25, 40, 0.95); border: 1px solid #b89b6b;
-            border-radius: 2rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8); overflow-y: auto;
+            width: 100%; max-width: 500px; height: 100%; background: rgba(20, 25, 40, 0.95);
+            border: 1px solid #b89b6b; border-radius: 1.5rem; padding: 0.8rem;
+            display: flex; flex-direction: column; gap: 0.6rem;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
+        
         @keyframes breakthroughFlash {
-            0% { box-shadow: 0 0 30px gold, inset 0 0 30px gold; }
-            50% { box-shadow: 0 0 80px orange, inset 0 0 80px orange; }
+            0% { box-shadow: 0 0 20px gold, inset 0 0 20px gold; }
+            50% { box-shadow: 0 0 60px orange, inset 0 0 60px orange; }
             100% { box-shadow: 0 0 0px gold, inset 0 0 0px gold; }
         }
         .breakthrough-glow { animation: breakthroughFlash 1.5s ease-out; }
-        .header { text-align: center; font-size: 1.8rem; font-weight: bold; color: #ffd78b; }
-        .player-name { text-align: center; font-size: 1.2rem; color: #fff; }
-        .stats {
-            display: flex; flex-wrap: wrap; justify-content: space-around; background: #1e1a24;
-            border-radius: 2rem; padding: 0.8rem; border: 1px solid #5e4e38; font-size: 0.9rem; gap: 0.4rem;
+        
+        /* 顶部标题栏 */
+        .header { text-align: center; font-size: 1.6rem; font-weight: bold; color: #ffd78b; line-height: 1.2; }
+        .player-name { text-align: center; font-size: 1.1rem; color: #fff; }
+        
+        /* 状态面板 - 整合修炼进度 */
+        .stats-panel {
+            background: #1e1a24; border-radius: 1.2rem; padding: 0.6rem 0.8rem;
+            border: 1px solid #5e4e38; font-size: 0.8rem;
+            display: flex; flex-wrap: wrap; justify-content: space-around; gap: 0.3rem;
         }
-        .stat-item { display: flex; align-items: center; gap: 0.3rem; }
+        .stat-item { display: flex; align-items: center; gap: 0.2rem; }
         .stat-item span:last-child { color: #ffd78b; font-weight: bold; }
-        .scene-bar { display: flex; background: #1e1a24; border-radius: 2rem; padding: 0.3rem; border: 1px solid #6b5d47; }
+        
+        /* 修炼进度条 */
+        .cultivate-section {
+            width: 100%; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.2rem;
+        }
+        .cultivate-label { font-size: 0.75rem; color: #b7a17c; white-space: nowrap; }
+        .progress-bar {
+            flex: 1; height: 8px; background: #2d2a24; border-radius: 10px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #d4af37, #f9e076);
+            width: 0%; transition: width 0.2s;
+        }
+        .cultivate-text { font-size: 0.7rem; color: #ffd78b; white-space: nowrap; }
+        
+        /* 场景切换栏 */
+        .scene-bar { display: flex; background: #1e1a24; border-radius: 1.2rem; padding: 0.2rem; border: 1px solid #6b5d47; flex-shrink: 0; }
         .scene-btn {
-            background: transparent; border: none; color: #b7a17c; padding: 0.5rem 0.5rem; border-radius: 2rem;
-            font-weight: bold; font-size: 0.85rem; flex: 1; text-align: center; cursor: pointer; touch-action: manipulation;
+            background: transparent; border: none; color: #b7a17c; padding: 0.5rem 0.4rem;
+            border-radius: 1rem; font-weight: bold; font-size: 0.8rem; flex: 1;
+            text-align: center; cursor: pointer; touch-action: manipulation;
         }
         .scene-btn.active { background: #4a3f2e; color: #ffe5a3; }
-       .panel {
-            background: #1b1e2b;
-            border-radius: 1.5rem;
-            padding: 1rem;
-            border: 1px solid #6b5d47;
-            display: none;
-            flex-direction: column;
-            gap: 0.8rem;
-            flex: 1;              /* 新增：占据剩余空间 */
-            overflow-y: auto;     /* 新增：内容超出时滚动 */
-            min-height: 0;        /* 新增：允许flex子元素缩小 */
+        
+        /* 场景面板 - 统一高度，内部滚动 */
+        .panel {
+            background: #1b1e2b; border-radius: 1.2rem; padding: 0.8rem;
+            border: 1px solid #6b5d47; display: none; flex-direction: column; gap: 0.5rem;
+            flex: 1; min-height: 0; overflow-y: auto;
         }
         .panel.active { display: flex; }
-        .progress-bar { width: 100%; height: 12px; background: #2d2a24; border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #d4af37, #f9e076); width: 0%; transition: width 0.2s; }
+        
+        /* 按钮样式 - 手机触摸优化 */
         .btn {
-            background: #2a2235; border: 1px solid #7a6a4b; color: #f3e0b0; padding: 0.6rem 1rem;
-            border-radius: 2rem; font-weight: bold; font-size: 0.85rem; cursor: pointer; min-width: 60px; text-align: center; touch-action: manipulation;
+            background: #2a2235; border: 1px solid #7a6a4b; color: #f3e0b0;
+            padding: 0.7rem 1rem; border-radius: 1.5rem; font-weight: bold; font-size: 0.8rem;
+            cursor: pointer; min-width: 55px; text-align: center; touch-action: manipulation;
         }
-        .btn:hover { background: #4f4233; border-color: #cfb67c; }
+        .btn:active { background: #4f4233; border-color: #cfb67c; }
         .btn.primary { background: #5e4c34; border-color: #e6b55a; }
         .btn.danger { border-color: #b54a4a; color: #ffbcaf; }
         .btn:disabled { opacity: 0.5; pointer-events: none; }
+        
+        /* 卡片样式 */
         .card {
-            background: #201c24; border-radius: 1.2rem; padding: 0.8rem; border: 1px solid #7d5f3f;
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+            background: #201c24; border-radius: 1rem; padding: 0.6rem 0.8rem;
+            border: 1px solid #7d5f3f; display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 0.4rem; font-size: 0.8rem;
         }
+        
+        /* 日志框 - 固定在底部 */
         .log-box {
-            background: #0b0e14; border-radius: 1rem; padding: 0.6rem; height: 140px; flex-shrink: 0;overflow-y: auto;
-            font-size: 0.8rem; color: #b9aa81; border: 1px solid #4f4532;
+            background: #0b0e14; border-radius: 0.8rem; padding: 0.5rem;
+            height: 90px; flex-shrink: 0; overflow-y: auto;
+            font-size: 0.75rem; color: #b9aa81; border: 1px solid #4f4532; line-height: 1.4;
         }
+        
+        /* 事件面板 */
         .event-panel {
-            background: #2a2235; border-radius: 1rem; padding: 0.8rem; border: 1px solid #b4944c;
-            display: none; margin-top: 0.5rem;
+            background: #2a2235; border-radius: 0.8rem; padding: 0.6rem;
+            border: 1px solid #b4944c; display: none; font-size: 0.8rem;
         }
-        .event-options { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.5rem; flex-wrap: wrap; }
+        .event-options { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.4rem; flex-wrap: wrap; }
+        
+        /* 弹窗 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: #1e1a2b; border: 2px solid #c7a55b; border-radius: 2rem; padding: 1.5rem; text-align: center; min-width: 260px; }
-        .modal-box h3 { color: #ffd78b; }
-        .modal-box input { padding: 0.5rem; border-radius: 1.5rem; border: 1px solid #c7a55b; background: #2a2230; color: #ffd78b; font-size: 1rem; text-align: center; width: 80%; margin: 0.5rem 0; }
-        .gender-option { font-size: 1.2rem; cursor: pointer; padding: 0.5rem 1rem; border-radius: 1rem; border: 2px solid transparent; display: inline-block; margin: 0 0.5rem; }
+        .modal-box { background: #1e1a2b; border: 2px solid #c7a55b; border-radius: 1.5rem; padding: 1.5rem; text-align: center; min-width: 260px; }
+        .modal-box h3 { color: #ffd78b; font-size: 1rem; }
+        .modal-box input { padding: 0.5rem; border-radius: 1.2rem; border: 1px solid #c7a55b; background: #2a2230; color: #ffd78b; font-size: 0.9rem; text-align: center; width: 80%; margin: 0.4rem 0; }
+        .gender-option { font-size: 1.1rem; cursor: pointer; padding: 0.4rem 0.8rem; border-radius: 1rem; border: 2px solid transparent; display: inline-block; margin: 0 0.4rem; }
         .gender-option.selected { border-color: #ffd700; background: rgba(255,215,0,0.2); }
-        .treasure-select { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.5rem 0; }
-        .treasure-item { background: #2a2235; border: 1px solid #7a6a4b; border-radius: 1rem; padding: 0.4rem 0.8rem; cursor: pointer; font-size: 0.8rem; }
+        .treasure-select { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.4rem 0; }
+        .treasure-item { background: #2a2235; border: 1px solid #7a6a4b; border-radius: 0.8rem; padding: 0.3rem 0.6rem; cursor: pointer; font-size: 0.75rem; }
         .treasure-item.equipped { border-color: #ffd700; background: #4a3f2e; }
     </style>
 </head>
 <body>
 <div class="game-container" id="gameContainer">
+    <!-- 标题 -->
     <div class="header" id="realmDisplay">炼气期·前期</div>
     <div class="player-name" id="playerNameDisplay">无名修士</div>
-    <div class="stats">
+    
+    <!-- 状态面板 + 修炼进度 -->
+    <div class="stats-panel" id="statsPanel">
         <div class="stat-item">灵力 <span id="spiritValue">100</span>/<span id="maxSpirit">100</span></div>
         <div class="stat-item">生命 <span id="hpValue">80</span>/<span id="maxHp">80</span></div>
         <div class="stat-item">灵石 <span id="stoneValue">30</span></div>
@@ -93,7 +128,15 @@
         <div class="stat-item" id="ageStat">寿元 <span id="ageValue">20</span>/<span id="maxAgeDisplay">100</span></div>
         <div class="stat-item">灵根 <span id="rootDisplay">五灵根</span></div>
         <div class="stat-item">突破率 <span id="breakRateDisplay">15%</span></div>
+        <!-- 修炼进度条 -->
+        <div class="cultivate-section">
+            <span class="cultivate-label">修为</span>
+            <div class="progress-bar"><div class="progress-fill" id="cultivateFill"></div></div>
+            <span class="cultivate-text" id="progressText">0/60</span>
+        </div>
     </div>
+    
+    <!-- 场景切换 -->
     <div class="scene-bar">
         <button class="scene-btn active" data-scene="cave">洞府</button>
         <button class="scene-btn" data-scene="sect">宗门</button>
@@ -101,41 +144,35 @@
         <button class="scene-btn" data-scene="market">坊市</button>
         <button class="scene-btn" data-scene="secret">秘境</button>
     </div>
-
+    
     <!-- 洞府面板 -->
     <div class="panel active" id="panelCave">
-        <div style="display:flex; justify-content:space-between;"><span>修炼进度</span><span id="progressText">0/60</span></div>
-        <div class="progress-bar"><div class="progress-fill" id="cultivateFill"></div></div>
-        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center;">
+        <div style="display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center;">
             <button class="btn primary" id="cultivateBtn">修炼</button>
-            <button class="btn" id="subRealmBtn">突破小境界</button>
-            <button class="btn" id="breakthroughBtn">渡劫大境界</button>
+            <button class="btn" id="subRealmBtn">小境界</button>
+            <button class="btn" id="breakthroughBtn">渡劫</button>
             <button class="btn" id="meditateBtn">吐纳</button>
             <button class="btn" id="healBtn">调息(10)</button>
             <button class="btn" id="fullHealBtn">回满(20)</button>
             <button class="btn" id="alchemyBtn">炼丹(18+2)</button>
         </div>
         <div id="masterSection">
-            <div id="noMasterMsg" style="text-align:center;">暂无师尊</div>
+            <div id="noMasterMsg" style="text-align:center;font-size:0.8rem;color:#7a6a8b;">暂无师尊</div>
             <div class="card" id="masterCard" style="display:none;">
                 <span>师尊 <span id="masterName"></span> 恩义<span id="masterFavor">0</span></span>
                 <button class="btn" id="askMasterBtn">请教(20)</button>
             </div>
         </div>
         <div id="partnerSection">
-            <div id="noPartnerMsg" style="text-align:center;">暂无道侣</div>
+            <div id="noPartnerMsg" style="text-align:center;font-size:0.8rem;color:#7a6a8b;">暂无道侣</div>
             <div class="card" id="partnerCard" style="display:none;">
                 <span>道侣 <span id="partnerName"></span> 亲密度<span id="partnerIntimacy">0</span></span>
                 <button class="btn" id="dualCultivateBtn">双修</button>
                 <button class="btn" id="renamePartnerBtn">改名</button>
             </div>
         </div>
-        <div class="card" id="treasureSection">
-            <div>
-                <span>法宝：</span>
-                <span id="currentTreasureName">无</span>
-                <span> 攻+<span id="currentTreasureAtk">0</span> 灵+<span id="currentTreasureSpirit">0</span></span>
-            </div>
+        <div class="card" id="treasureCard">
+            <span>法宝：<span id="currentTreasureName">无</span> 攻+<span id="currentTreasureAtk">0</span></span>
             <button class="btn" id="changeTreasureBtn">更换</button>
         </div>
         <div class="card">
@@ -143,57 +180,62 @@
             <button class="btn" id="renamePlayerBtn">改名</button>
         </div>
     </div>
-
+    
     <!-- 宗门面板 -->
     <div class="panel" id="panelSect">
-        <div id="sectInfo">散修</div>
-        <div>贡献 <span id="contribValue">0</span></div>
-        <div style="display:flex; gap:0.5rem;">
+        <div id="sectInfo" style="font-size:0.9rem;">散修</div>
+        <div style="font-size:0.8rem;">贡献 <span id="contribValue">0</span></div>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
             <button class="btn" id="sectTaskBtn">任务</button>
-            <button class="btn" id="sectSalaryBtn" disabled>俸禄(5贡献)</button>
-            <button class="btn" id="sectGuardBtn" disabled>护法(30灵石+10贡献)</button>
+            <button class="btn" id="sectSalaryBtn" disabled>俸禄(5)</button>
+            <button class="btn" id="sectGuardBtn" disabled>护法(30+10)</button>
         </div>
     </div>
-
+    
     <!-- 野外面板 -->
     <div class="panel" id="panelWild">
         <div class="card" id="monsterCard">
             <div>
                 <div id="monsterName">山野妖狼</div>
-                <div>生命 <span id="monsterHp">50</span> | 灵石+<span id="monsterReward">12</span></div>
+                <div style="font-size:0.75rem;">生命 <span id="monsterHp">50</span> | 灵石+<span id="monsterReward">12</span></div>
             </div>
             <button class="btn danger" id="fightBtn">攻击</button>
         </div>
-        <div style="display:flex; gap:0.5rem;">
+        <div style="display:flex; gap:0.4rem;">
             <button class="btn" id="adventureBtn">云游</button>
             <button class="btn" id="doubleAdventureBtn">云游x2</button>
         </div>
     </div>
-
+    
     <!-- 坊市面板 -->
     <div class="panel" id="panelMarket">
-        <div class="card"><span>破境丹(+10%突破率)<span id="breakPillUsed">0</span>/3</span><button class="btn" id="buyBreakPill">30灵石</button></div>
+        <div class="card"><span>破境丹(+10%)<span id="breakPillUsed">0</span>/3</span><button class="btn" id="buyBreakPill">30灵石</button></div>
         <div class="card"><span>回灵丹(+40灵力)</span><button class="btn" id="buySpiritPill">15灵石</button></div>
         <div class="card"><span>寿元果(寿限+8)</span><button class="btn" id="buyLifeFruit">40灵石</button></div>
         <div class="card"><span>药材x1</span><button class="btn" id="buyHerb">200灵石</button></div>
-        <div class="card"><span>攻击功法残卷</span><button class="btn" id="buyAtkManual">50灵石</button></div>
-        <div class="card"><span>修炼功法残卷</span><button class="btn" id="buySpdManual">50灵石</button></div>
-        <div class="card"><span>灵力功法残卷</span><button class="btn" id="buySpiritManual">50灵石</button></div>
+        <div class="card"><span>攻击功法</span><button class="btn" id="buyAtkManual">50灵石</button></div>
+        <div class="card"><span>修炼功法</span><button class="btn" id="buySpdManual">50灵石</button></div>
+        <div class="card"><span>灵力功法</span><button class="btn" id="buySpiritManual">50灵石</button></div>
         <div class="card"><span>随机法宝</span><button class="btn" id="buyTreasure">50灵石</button></div>
     </div>
-
+    
     <!-- 秘境面板 -->
     <div class="panel" id="panelSecret">
-        <div style="text-align:center;">秘境高风险高回报</div>
+        <div style="text-align:center;font-size:0.9rem;">秘境高风险高回报</div>
         <button class="btn danger" id="secretExploreBtn">探索秘境(20灵力)</button>
     </div>
-
-    <div class="log-box" id="logBox">> 踏入仙途...</div>
+    
+    <!-- 事件面板 -->
     <div class="event-panel" id="eventPanel">
         <div id="eventDesc"></div>
         <div class="event-options" id="eventOptions"></div>
     </div>
-    <div style="display:flex; justify-content:space-between;">
+    
+    <!-- 日志框 -->
+    <div class="log-box" id="logBox">> 踏入仙途...</div>
+    
+    <!-- 底部按钮 -->
+    <div style="display:flex; justify-content:space-between; flex-shrink:0;">
         <button class="btn" id="saveBtn">保存</button>
         <button class="btn" id="resetBtn">重修</button>
     </div>
@@ -202,16 +244,16 @@
 
 <script>
 (function(){
-    // ========== 境界数据 ==========
+    // ========== 数据定义 ==========
     const REALMS = [
-        { name:"炼气期", attack:2, spiritMax:100, lifeBonus:20,  hpBase:80,  subCost:[60,100] },
+        { name:"炼气期", attack:2, spiritMax:100, lifeBonus:20, hpBase:80, subCost:[60,100] },
         { name:"筑基期", attack:5, spiritMax:150, lifeBonus:120, hpBase:150, subCost:[200,320] },
         { name:"金丹期", attack:12, spiritMax:210, lifeBonus:320, hpBase:250, subCost:[500,800] },
         { name:"元婴期", attack:28, spiritMax:300, lifeBonus:720, hpBase:400, subCost:[1200,1800] },
-        { name:"化神期", attack:65, spiritMax:420, lifeBonus:1420,hpBase:650, subCost:[3000,4500] },
-        { name:"渡劫期", attack:150, spiritMax:580, lifeBonus:1920,hpBase:1000,subCost:[7000,10000] },
+        { name:"化神期", attack:65, spiritMax:420, lifeBonus:1420, hpBase:650, subCost:[3000,4500] },
+        { name:"渡劫期", attack:150, spiritMax:580, lifeBonus:1920, hpBase:1000, subCost:[7000,10000] },
         { name:"大乘期", attack:350, spiritMax:800, lifeBonus:Infinity, hpBase:1600, subCost:[16000,24000], flyTime:1000 },
-        { name:"飞升境", attack:800, spiritMax:1200,lifeBonus:Infinity, hpBase:2500, subCost:[35000,50000] }
+        { name:"飞升境", attack:800, spiritMax:1200, lifeBonus:Infinity, hpBase:2500, subCost:[35000,50000] }
     ];
 
     const ROOTS = {
@@ -228,14 +270,14 @@
     ];
 
     const MONSTER_TEMPLATES = [
-        [ { name:"妖狼", hp:30, reward:12, atk:5, herb:0.7 }, { name:"毒蛇", hp:25, reward:15, atk:7, herb:0.8 } ],
-        [ { name:"熊精", hp:60, reward:30, atk:12, herb:0.7 }, { name:"石魔", hp:70, reward:35, atk:10, herb:0.6 } ],
-        [ { name:"蛇妖", hp:100, reward:55, atk:20, herb:0.7 }, { name:"金甲尸", hp:120, reward:60, atk:18, herb:0.6 } ],
-        [ { name:"石魔老祖", hp:180, reward:90, atk:32, herb:0.7 }, { name:"幻音女妖", hp:160, reward:85, atk:35, herb:0.8 } ],
-        [ { name:"鬼将", hp:280, reward:140, atk:50, herb:0.7 }, { name:"修罗", hp:320, reward:150, atk:55, herb:0.6 } ],
-        [ { name:"天雷邪修", hp:450, reward:220, atk:75, herb:0.7 }, { name:"九尾狐", hp:480, reward:240, atk:80, herb:0.6 } ],
-        [ { name:"蛟龙", hp:650, reward:350, atk:110, herb:0.7 }, { name:"凤凰", hp:700, reward:380, atk:115, herb:0.6 } ],
-        [ { name:"天魔", hp:1000, reward:500, atk:160, herb:0.7 }, { name:"古神残魂", hp:1100, reward:550, atk:170, herb:0.6 } ]
+        [{ name:"妖狼", hp:30, reward:12, atk:5, herb:0.7 }, { name:"毒蛇", hp:25, reward:15, atk:7, herb:0.8 }],
+        [{ name:"熊精", hp:60, reward:30, atk:12, herb:0.7 }, { name:"石魔", hp:70, reward:35, atk:10, herb:0.6 }],
+        [{ name:"蛇妖", hp:100, reward:55, atk:20, herb:0.7 }, { name:"金甲尸", hp:120, reward:60, atk:18, herb:0.6 }],
+        [{ name:"石魔老祖", hp:180, reward:90, atk:32, herb:0.7 }, { name:"幻音女妖", hp:160, reward:85, atk:35, herb:0.8 }],
+        [{ name:"鬼将", hp:280, reward:140, atk:50, herb:0.7 }, { name:"修罗", hp:320, reward:150, atk:55, herb:0.6 }],
+        [{ name:"天雷邪修", hp:450, reward:220, atk:75, herb:0.7 }, { name:"九尾狐", hp:480, reward:240, atk:80, herb:0.6 }],
+        [{ name:"蛟龙", hp:650, reward:350, atk:110, herb:0.7 }, { name:"凤凰", hp:700, reward:380, atk:115, herb:0.6 }],
+        [{ name:"天魔", hp:1000, reward:500, atk:160, herb:0.7 }, { name:"古神残魂", hp:1100, reward:550, atk:170, herb:0.6 }]
     ];
 
     const DEFAULT_STATE = {
@@ -252,10 +294,8 @@
         treasures:[], equippedTreasureIndex:-1,
         manuals:{ atk:{level:0,bonus:0}, spd:{level:0,bonus:0}, spirit:{level:0,bonus:0} },
         flyTimeLeft:0,
-        breakPillUsed:0,
-        guardUsedTotal:0,
-        logMessages:["踏入仙途..."],
-        eventActive:false
+        breakPillUsed:0, guardUsedTotal:0,
+        logMessages:["踏入仙途..."], eventActive:false
     };
 
     let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -311,17 +351,13 @@
         state.maxHp = Math.floor(realm.hpBase * (1 + state.subRealm * 0.12));
         if (state.spirit > state.maxSpirit) state.spirit = state.maxSpirit;
         if (state.hp > state.maxHp) state.hp = state.maxHp;
-        if (!isFinite(state.maxAge)) {
-            state.age = Math.min(state.age, state.maxAge);
-        } else if (state.age > state.maxAge) {
-            state.age = state.maxAge;
-        }
+        if (!isFinite(state.maxAge)) { state.age = Math.min(state.age, state.maxAge); }
+        else if (state.age > state.maxAge) { state.age = state.maxAge; }
     }
 
     function getEquippedTreasure() {
-        if (state.equippedTreasureIndex >= 0 && state.equippedTreasureIndex < state.treasures.length) {
+        if (state.equippedTreasureIndex >= 0 && state.equippedTreasureIndex < state.treasures.length)
             return state.treasures[state.equippedTreasureIndex];
-        }
         return null;
     }
 
@@ -423,7 +459,7 @@
         if (state.partner) return;
         const names = ["紫霞仙子","白素贞","柳梦璃","云韵","彩蝶"];
         const def = names[Math.floor(Math.random()*names.length)];
-        showModal(`<h3>结为道侣</h3><p>赐名：</p><input type="text" id="pName" value="${def}" maxlength="8"><br><button class="btn" id="confirmPartnerBtn">确定</button>`);
+        showModal(`<h3>结为道侣</h3><input type="text" id="pName" value="${def}" maxlength="8"><br><button class="btn" id="confirmPartnerBtn">确定</button>`);
         document.getElementById('confirmPartnerBtn').addEventListener('click', ()=>{
             const name = document.getElementById('pName').value.trim() || def;
             state.partner = { name, intimacy:20, attackBonus:3+state.realmIndex*2, speedBonus:0.05+state.realmIndex*0.02 };
@@ -457,12 +493,12 @@
 
     function showTreasureSelect() {
         if (!state.treasures.length) { addLog("没有任何法宝"); return; }
-        showModal(`<h3>选择装备的法宝</h3><div class="treasure-select" id="treasureList"></div><button class="btn" id="confirmTreasureBtn">关闭</button>`);
+        showModal(`<h3>选择法宝</h3><div class="treasure-select" id="treasureList"></div><button class="btn" id="confirmTreasureBtn">关闭</button>`);
         const list = document.getElementById('treasureList');
         state.treasures.forEach((t,i)=>{
             const item = document.createElement('div');
             item.className = 'treasure-item' + (i===state.equippedTreasureIndex?' equipped':'');
-            item.textContent = `${t.name} (攻+${t.atk} 灵+${t.spirit})`;
+            item.textContent = `${t.name} (攻+${t.atk})`;
             item.addEventListener('click', ()=>{
                 state.equippedTreasureIndex = i; recalcStats(); updateUI(); saveGame(); hideModal();
                 addLog(`装备法宝【${t.name}】`);
@@ -472,7 +508,7 @@
         document.getElementById('confirmTreasureBtn').addEventListener('click', hideModal);
     }
 
-    // ========== 完整事件池 ==========
+    // ========== 事件池（完整版） ==========
     const eventPool = {
         cultivate: [
             { desc:"灵气逆乱，经脉刺痛", opts:[
@@ -483,20 +519,20 @@
                 { text:"参悟(+60修为,寿限-2)", action:()=>{ state.cultivation=Math.min(state.cultivation+60,getCurrentMaxCultivation()); reduceMaxAge(2); addLog("参悟符文"); } },
                 { text:"记录后继续修炼", action:()=>{ state.cultivation=Math.min(state.cultivation+10,getCurrentMaxCultivation()); addLog("修为+10"); } }
             ]},
-            { desc:"天降灵雨，灵力充沛", opts:[
+            { desc:"天降灵雨", opts:[
                 { text:"全力吸收(+80修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("修为大增"); } },
-                { text:"小心提防", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("修为+20"); } }
+                { text:"小心提防(+20)", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("修为+20"); } }
             ]},
-            { desc:"心魔幻化挚爱", opts:[
-                { text:"斩情(+50修为,亲密度-10)", action:()=>{ if(state.partner) state.partner.intimacy-=10; state.cultivation=Math.min(state.cultivation+50,getCurrentMaxCultivation()); addLog("斩断情丝"); } },
-                { text:"深陷(-10修为)", action:()=>{ state.cultivation=Math.max(0,state.cultivation-10); addLog("修为倒退"); } }
+            { desc:"心魔幻化", opts:[
+                { text:"斩情(+50,亲密度-10)", action:()=>{ if(state.partner) state.partner.intimacy-=10; state.cultivation=Math.min(state.cultivation+50,getCurrentMaxCultivation()); addLog("斩断情丝"); } },
+                { text:"深陷(-10)", action:()=>{ state.cultivation=Math.max(0,state.cultivation-10); addLog("修为倒退"); } }
             ]},
             { desc:"灵根异动", opts:[
-                { text:"引导(+100修为,灵根重置)", action:()=>{ state.spiritualRoot=Object.keys(ROOTS)[Math.floor(Math.random()*5)]; state.cultivation=Math.min(state.cultivation+100,getCurrentMaxCultivation()); recalcStats(); addLog("灵根重塑"); } },
-                { text:"压制(+20修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("修为+20"); } }
+                { text:"引导(+100,灵根重置)", action:()=>{ state.spiritualRoot=Object.keys(ROOTS)[Math.floor(Math.random()*5)]; state.cultivation=Math.min(state.cultivation+100,getCurrentMaxCultivation()); recalcStats(); addLog("灵根重塑"); } },
+                { text:"压制(+20)", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("修为+20"); } }
             ]},
             { desc:"古籍残页", opts:[
-                { text:"修习(+70修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+70,getCurrentMaxCultivation()); addLog("修习古籍"); } },
+                { text:"修习(+70)", action:()=>{ state.cultivation=Math.min(state.cultivation+70,getCurrentMaxCultivation()); addLog("修习古籍"); } },
                 { text:"出售(灵石+30)", action:()=>{ state.stones+=30; addLog("灵石+30"); } }
             ]},
             { desc:"雷云凝聚", opts:[
@@ -504,37 +540,13 @@
                 { text:"躲避", action:()=>addLog("继续修炼") }
             ]},
             { desc:"灵台清明", opts:[
-                { text:"深度感悟(+90修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+90,getCurrentMaxCultivation()); addLog("感悟大道"); } },
-                { text:"浅尝辄止(+30修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+30,getCurrentMaxCultivation()); addLog("修为+30"); } }
-            ]},
-            { desc:"丹毒发作", opts:[
-                { text:"运功逼毒(-30灵力,+50修为)", action:()=>{ if(state.spirit>=30){ state.spirit-=30; state.cultivation=Math.min(state.cultivation+50,getCurrentMaxCultivation()); addLog("逼毒成功"); } else addLog("灵力不足"); } },
-                { text:"吞服草药(药材-2)", action:()=>{ if(state.herb>=2){ state.herb-=2; addLog("以草药镇压"); } else addLog("药材不足"); } }
-            ]},
-            { desc:"祖师托梦", opts:[
-                { text:"接受传承(+120修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+120,getCurrentMaxCultivation()); addLog("传承修为"); } },
-                { text:"婉拒", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("自行领悟"); } }
-            ]},
-            { desc:"星辰之力降临", opts:[
-                { text:"引星入体(攻击+5永久)", action:()=>{ state.baseAttack+=5; addLog("攻击永久+5"); recalcStats(); } },
-                { text:"吸收星力(+50修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+50,getCurrentMaxCultivation()); addLog("修为+50"); } }
-            ]},
-            { desc:"顿悟剑意", opts:[
-                { text:"精研剑道(攻击+3)", action:()=>{ state.manuals.atk.bonus+=3; recalcStats(); addLog("攻击提升"); } },
-                { text:"继续修炼", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("修为+20"); } }
-            ]},
-            { desc:"时空裂隙", opts:[
-                { text:"冒险进入", action:()=>{ secretExplore(); } },
-                { text:"避开", action:()=>addLog("裂隙消失") }
-            ]},
-            { desc:"幽冥鬼火", opts:[
-                { text:"炼化(+40灵力上限)", action:()=>{ state.maxSpirit+=40; addLog("灵力上限+40"); recalcStats(); } },
-                { text:"驱散", action:()=>addLog("鬼火消散") }
+                { text:"深度感悟(+90)", action:()=>{ state.cultivation=Math.min(state.cultivation+90,getCurrentMaxCultivation()); addLog("感悟大道"); } },
+                { text:"浅尝(+30)", action:()=>{ state.cultivation=Math.min(state.cultivation+30,getCurrentMaxCultivation()); addLog("修为+30"); } }
             ]}
         ],
         wild: [
             { desc:"受伤散修", opts:[
-                { text:"救治(-20灵石,+80修为)", action:()=>{ if(state.stones>=20){ state.stones-=20; state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("救治散修"); } else addLog("灵石不足"); } },
+                { text:"救治(-20灵石,+80)", action:()=>{ if(state.stones>=20){ state.stones-=20; state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("救治散修"); } else addLog("灵石不足"); } },
                 { text:"劫掠(+40灵石,寿限-3)", action:()=>{ state.stones+=40; reduceMaxAge(3); addLog("劫掠"); } },
                 { text:"离开", action:()=>addLog("离去") }
             ]},
@@ -547,24 +559,8 @@
                 { text:"不理", action:()=>addLog("仙鹤离去") }
             ]},
             { desc:"强盗拦路", opts:[
-                { text:"战斗(生命-20,灵石+60)", action:()=>{ state.hp=Math.max(0,state.hp-20); state.stones+=60; if(state.hp<=0) hpDeathPenalty(); addLog("击退强盗"); } },
+                { text:"战斗(生命-20,+60灵石)", action:()=>{ state.hp=Math.max(0,state.hp-20); state.stones+=60; if(state.hp<=0) hpDeathPenalty(); addLog("击退强盗"); } },
                 { text:"交钱(-30灵石)", action:()=>{ if(state.stones>=30){ state.stones-=30; addLog("交钱保命"); } else addLog("灵石不足"); } }
-            ]},
-            { desc:"山崖奇花", opts:[
-                { text:"采摘(药材+3,生命-10)", action:()=>{ state.herb+=3; state.hp=Math.max(0,state.hp-10); if(state.hp<=0) hpDeathPenalty(); addLog("采得药材"); } },
-                { text:"放弃", action:()=>addLog("继续前行") }
-            ]},
-            { desc:"古修遗物", opts:[
-                { text:"开启(随机法宝)", action:()=>{ const t=TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); } },
-                { text:"不碰", action:()=>addLog("谨慎离开") }
-            ]},
-            { desc:"妖兽巢穴", opts:[
-                { text:"偷蛋(+80灵石,生命-30)", action:()=>{ state.stones+=80; state.hp=Math.max(0,state.hp-30); if(state.hp<=0) hpDeathPenalty(); addLog("偷蛋成功"); } },
-                { text:"避开", action:()=>addLog("绕道") }
-            ]},
-            { desc:"迷阵", opts:[
-                { text:"破阵(灵力-15,修为+40)", action:()=>{ if(state.spirit>=15){ state.spirit-=15; state.cultivation=Math.min(state.cultivation+40,getCurrentMaxCultivation()); addLog("破阵成功"); } else addLog("灵力不足"); } },
-                { text:"退出", action:()=>addLog("退出迷阵") }
             ]}
         ],
         sect: [
@@ -573,36 +569,24 @@
                 { text:"放弃", action:()=>addLog("弃权") }
             ]},
             { desc:"长老传功", opts:[
-                { text:"接受(+30修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+30,getCurrentMaxCultivation()); addLog("传功"); } },
+                { text:"接受(+30)", action:()=>{ state.cultivation=Math.min(state.cultivation+30,getCurrentMaxCultivation()); addLog("传功"); } },
                 { text:"拒绝", action:()=>addLog("婉拒") }
-            ]},
-            { desc:"护法任务", opts:[
-                { text:"巡逻(贡献+8)", action:()=>{ state.contribution+=8; addLog("巡逻完成"); } },
-                { text:"偷懒", action:()=>{ state.contribution-=2; addLog("被罚"); } }
-            ]},
-            { desc:"炼丹堂求助", opts:[
-                { text:"协助(药材+2,贡献+5)", action:()=>{ state.herb+=2; state.contribution+=5; addLog("协助炼丹"); } },
-                { text:"拒绝", action:()=>addLog("拒绝") }
             ]}
         ],
         secret: [
             { desc:"古老祭坛", opts:[
-                { text:"献祭(-30灵石,+100修为)", action:()=>{ if(state.stones>=30){ state.stones-=30; state.cultivation=Math.min(state.cultivation+100,getCurrentMaxCultivation()); addLog("献祭成功"); } else addLog("灵石不足"); } },
+                { text:"献祭(-30灵石,+100)", action:()=>{ if(state.stones>=30){ state.stones-=30; state.cultivation=Math.min(state.cultivation+100,getCurrentMaxCultivation()); addLog("献祭成功"); } else addLog("灵石不足"); } },
                 { text:"摧毁(+50灵石)", action:()=>{ state.stones+=50; addLog("摧毁祭坛"); } }
             ]},
             { desc:"传送阵", opts:[
-                { text:"激活(-30灵力,修为+80)", action:()=>{ if(state.spirit>=30){ state.spirit-=30; state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("传送灵界"); } else addLog("灵力不足"); } },
+                { text:"激活(-30灵力,+80)", action:()=>{ if(state.spirit>=30){ state.spirit-=30; state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("传送灵界"); } else addLog("灵力不足"); } },
                 { text:"离开", action:()=>addLog("离开") }
-            ]},
-            { desc:"守护兽", opts:[
-                { text:"战斗(-15灵力)", action:()=>{ if(state.spirit<15) return; state.spirit-=15; state.hp=Math.max(0,state.hp-20); if(Math.random()<0.5){ state.stones+=60; addLog("击败守护兽"); } if(state.hp<=0) hpDeathPenalty(); } },
-                { text:"逃跑", action:()=>{ reduceMaxAge(4); addLog("逃跑，寿限-4"); } }
             ]}
         ],
         dual: [
-            { desc:"道侣突破征兆", opts:[
+            { desc:"道侣突破", opts:[
                 { text:"辅助(-30灵力,道侣攻击+5)", action:()=>{ if(state.spirit>=30){ state.spirit-=30; if(state.partner) state.partner.attackBonus+=5; recalcStats(); addLog("道侣突破"); } else addLog("灵力不足"); } },
-                { text:"静观其变", action:()=>addLog("观望") }
+                { text:"静观", action:()=>addLog("观望") }
             ]}
         ],
         master: [
@@ -666,8 +650,7 @@
         if (success) {
             state.realmIndex++; state.subRealm = 0;
             state.usedGuardThisRealm = false;
-            state.breakPillUsed = 0;
-            state.guardUsedTotal = 0;
+            state.breakPillUsed = 0; state.guardUsedTotal = 0;
             if (state.realmIndex === 6) state.flyTimeLeft = 1000;
             state.baseBreakRate = 5 + Math.floor(Math.random() * 16);
             recalcStats(); state.hp = state.maxHp;
@@ -860,7 +843,6 @@
     function buySpiritManual(){ if(state.stones<50) return; state.stones-=50; let a=5+Math.floor(Math.random()*8); state.manuals.spirit.level++; state.manuals.spirit.bonus+=a; recalcStats(); addLog(`灵力功法+${a}`); updateUI(); }
     function buyTreasure(){ if(state.stones<50) return; state.stones-=50; const t=TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); }
 
-    // ========== 改名 ==========
     function renamePlayer() {
         showModal(`<h3>修改道号</h3><input type="text" id="renameInput" value="${state.playerName}" maxlength="8"><br><button class="btn" id="confirmRenameBtn">确定</button>`);
         document.getElementById('confirmRenameBtn').onclick = ()=>{ const n=document.getElementById('renameInput').value.trim(); if(n){ state.playerName=n; addLog(`道号更改为【${n}】`); } hideModal(); updateUI(); saveGame(); };
@@ -890,10 +872,10 @@
         state.eventActive = false;
     }
 
-    function saveGame() { try{ localStorage.setItem('xiuxian_final_v6', JSON.stringify(state)); } catch(e){} }
+    function saveGame() { try{ localStorage.setItem('xiuxian_v7', JSON.stringify(state)); } catch(e){} }
     function loadGame() {
         try {
-            const s = localStorage.getItem('xiuxian_final_v6');
+            const s = localStorage.getItem('xiuxian_v7');
             if(s) {
                 state = JSON.parse(s);
                 if(!state.treasures) state.treasures=[];
@@ -927,20 +909,24 @@
         document.getElementById('breakRateDisplay').textContent = getTotalBreakRate()+'%';
         document.getElementById('contribValue').textContent = state.contribution;
         document.getElementById('sectInfo').textContent = state.sectName ? `${state.sectName}弟子` : '散修';
+        
         const ageStat = document.getElementById('ageStat');
         if (state.realmIndex >= 6) {
             ageStat.innerHTML = '寿元 <span>无尽</span>';
-            if (state.realmIndex === 6) ageStat.innerHTML += ` 飞升剩余 <span>${Math.floor(state.flyTimeLeft)}</span>年`;
+            if (state.realmIndex === 6) ageStat.innerHTML += ` 飞升<span>${Math.floor(state.flyTimeLeft)}</span>年`;
         } else {
             document.getElementById('ageValue').textContent = Math.floor(state.age);
             document.getElementById('maxAgeDisplay').textContent = isFinite(state.maxAge)?state.maxAge:'∞';
         }
+        
         document.getElementById('breakPillUsed').textContent = state.breakPillUsed;
         document.getElementById('sectGuardBtn').disabled = !state.sectName||state.guardUsedTotal>=1||state.stones<30||state.contribution<10;
         document.getElementById('sectSalaryBtn').disabled = state.contribution<5;
+        
         const needed = getCurrentMaxCultivation();
         document.getElementById('progressText').textContent = `${state.cultivation}/${needed}`;
         document.getElementById('cultivateFill').style.width = Math.min(100,(state.cultivation/needed)*100)+'%';
+        
         if(state.hasMaster){
             document.getElementById('masterCard').style.display='flex'; document.getElementById('noMasterMsg').style.display='none';
             document.getElementById('masterName').textContent=state.masterName; document.getElementById('masterFavor').textContent=state.masterFavor;
@@ -949,10 +935,11 @@
             document.getElementById('partnerCard').style.display='flex'; document.getElementById('noPartnerMsg').style.display='none';
             document.getElementById('partnerName').textContent=state.partner.name; document.getElementById('partnerIntimacy').textContent=state.partner.intimacy;
         } else { document.getElementById('partnerCard').style.display='none'; document.getElementById('noPartnerMsg').style.display='block'; }
+        
         const eq = getEquippedTreasure();
         document.getElementById('currentTreasureName').textContent = eq?eq.name:'无';
         document.getElementById('currentTreasureAtk').textContent = eq?eq.atk:0;
-        document.getElementById('currentTreasureSpirit').textContent = eq?eq.spirit:0;
+        
         const m = state.manuals, parts=[];
         if(m.atk.level>0) parts.push(`攻${m.atk.level}级(+${m.atk.bonus})`);
         if(m.spd.level>0) parts.push(`速${m.spd.level}级(+${m.spd.bonus}%)`);
@@ -996,7 +983,7 @@
 
     function init() {
         bindEvents();
-        if (!localStorage.getItem('xiuxian_final_v6')) { startNewGame(); }
+        if (!localStorage.getItem('xiuxian_v7')) { startNewGame(); }
         else { loadGame(); }
         switchScene('cave');
     }

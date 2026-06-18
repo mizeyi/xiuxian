@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>仙途 · 最终完美版</title>
+  <title>仙途</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#0a0f1e; min-height:100vh; display:flex; justify-content:center; align-items:center; font-family:"Noto Serif SC","KaiTi",serif; padding:0.5rem; color:#e5d5b0; }
+    html, body { height:100%; overflow:hidden; background:#0a0f1e; font-family:"Noto Serif SC","KaiTi",serif; }
+    body { display:flex; justify-content:center; align-items:center; padding:0.5rem; color:#e5d5b0; }
     .game-container {
-      width:100%; max-width:520px; background:rgba(20,25,40,0.95); border:1px solid #b89b6b;
+      width:100%; max-width:520px; height:100%; background:rgba(20,25,40,0.95); border:1px solid #b89b6b;
       border-radius:2rem; padding:1rem; display:flex; flex-direction:column; gap:0.8rem;
-      box-shadow:0 0 30px rgba(0,0,0,0.8);
+      box-shadow:0 0 30px rgba(0,0,0,0.8); overflow-y:auto;
     }
     @keyframes breakthroughFlash {
       0% { box-shadow:0 0 30px gold, inset 0 0 30px gold; }
@@ -29,7 +30,7 @@
     .scene-bar { display:flex; background:#1e1a24; border-radius:2rem; padding:0.3rem; border:1px solid #6b5d47; }
     .scene-btn {
       background:transparent; border:none; color:#b7a17c; padding:0.5rem 0.5rem; border-radius:2rem;
-      font-weight:bold; font-size:0.85rem; flex:1; text-align:center; cursor:pointer;
+      font-weight:bold; font-size:0.85rem; flex:1; text-align:center; cursor:pointer; touch-action:manipulation;
     }
     .scene-btn.active { background:#4a3f2e; color:#ffe5a3; }
     .panel { background:#1b1e2b; border-radius:1.5rem; padding:1rem; border:1px solid #6b5d47; display:none; flex-direction:column; gap:0.8rem; }
@@ -39,6 +40,7 @@
     .btn {
       background:#2a2235; border:1px solid #7a6a4b; color:#f3e0b0; padding:0.6rem 1rem;
       border-radius:2rem; font-weight:bold; font-size:0.85rem; cursor:pointer; min-width:60px; text-align:center;
+      touch-action:manipulation;
     }
     .btn:hover { background:#4f4233; border-color:#cfb67c; }
     .btn.primary { background:#5e4c34; border-color:#e6b55a; }
@@ -165,7 +167,7 @@
 
   <!-- 坊市 -->
   <div class="panel" id="panelMarket">
-    <div class="card"><span>破境丹(+10%突破率)</span><button class="btn" id="buyBreakPill">30灵石</button></div>
+    <div class="card"><span>破境丹(+10%突破率)<span id="breakPillUsed">0</span>/3</span><button class="btn" id="buyBreakPill">30灵石</button></div>
     <div class="card"><span>回灵丹(+40灵力)</span><button class="btn" id="buySpiritPill">15灵石</button></div>
     <div class="card"><span>寿元果(寿限+8)</span><button class="btn" id="buyLifeFruit">40灵石</button></div>
     <div class="card"><span>药材x1</span><button class="btn" id="buyHerb">200灵石</button></div>
@@ -205,12 +207,10 @@
     { name:"大乘期", attack:350, spiritMax:800, lifeBonus:Infinity, hpBase:1600, subCost:[16000,24000], flyTime:1000 },
     { name:"飞升境", attack:800, spiritMax:1200,lifeBonus:Infinity, hpBase:2500, subCost:[35000,50000] }
   ];
-
   const ROOTS = {
     five:{name:"五灵根",mult:0.5}, four:{name:"四灵根",mult:0.6}, three:{name:"三灵根",mult:0.8},
     double:{name:"双灵根",mult:1.2}, heaven:{name:"天灵根",mult:1.5}
   };
-
   const TREASURES = [
     { name:"青冥剑", atk:8, spirit:0, speed:0 }, { name:"玄龟盾", atk:5, spirit:20, speed:0 },
     { name:"朱雀羽", atk:10, spirit:0, speed:0.02 }, { name:"碧玉箫", atk:4, spirit:30, speed:0.01 },
@@ -218,7 +218,6 @@
     { name:"噬魂幡", atk:15, spirit:-10, speed:0 }, { name:"定海珠", atk:3, spirit:40, speed:0.02 },
     { name:"斩仙葫芦", atk:18, spirit:0, speed:0.01 }, { name:"风雷翅", atk:9, spirit:10, speed:0.04 }
   ];
-
   const MONSTER_TEMPLATES = [
     [ { name:"妖狼", hp:30, reward:12, atk:5, herb:0.7 }, { name:"毒蛇", hp:25, reward:15, atk:7, herb:0.8 } ],
     [ { name:"熊精", hp:60, reward:30, atk:12, herb:0.7 }, { name:"石魔", hp:70, reward:35, atk:10, herb:0.6 } ],
@@ -244,6 +243,8 @@
     treasures: [], equippedTreasureIndex: -1,
     manuals: { atk:{level:0,bonus:0}, spd:{level:0,bonus:0}, spirit:{level:0,bonus:0} },
     flyTimeLeft: 0,
+    breakPillUsed: 0,
+    guardUsedTotal: 0,
     logMessages:["踏入仙途..."], eventActive:false
   };
 
@@ -324,37 +325,19 @@
   function consumeYears(y) {
     if (state.realmIndex === 6) {
       state.flyTimeLeft = Math.max(0, state.flyTimeLeft - y);
-      if (state.flyTimeLeft <= 0) {
-        addLog("飞升时限已至，未能飞升，轮回重修。");
-        resetGame(true);
-        return false;
-      }
+      if (state.flyTimeLeft <= 0) { addLog("飞升时限已至，轮回重修。"); resetGame(true); return false; }
       return true;
     }
     state.age += y;
-    if (state.age >= state.maxAge) {
-      addLog("寿元耗尽，轮回重修。");
-      resetGame(true);
-      return false;
-    }
+    if (state.age >= state.maxAge) { addLog("寿元耗尽，轮回重修。"); resetGame(true); return false; }
     return true;
   }
 
   function reduceMaxAge(y) {
-    if (state.realmIndex >= 6) {
-      state.flyTimeLeft = Math.max(0, state.flyTimeLeft - y);
-      if (state.flyTimeLeft <= 0) {
-        addLog("飞升时限耗尽，轮回重修。");
-        resetGame(true);
-      }
-      return;
-    }
+    if (state.realmIndex >= 6) { state.flyTimeLeft = Math.max(0, state.flyTimeLeft - y); if (state.flyTimeLeft<=0) { addLog("飞升时限耗尽，轮回重修。"); resetGame(true); } return; }
     if (!isFinite(state.maxAge)) return;
     state.maxAge = Math.max(state.age, state.maxAge - y);
-    if (state.age >= state.maxAge) {
-      addLog("寿元枯竭，轮回重修。");
-      resetGame(true);
-    }
+    if (state.age >= state.maxAge) { addLog("寿元枯竭，轮回重修。"); resetGame(true); }
   }
 
   function agePenalty() { return Math.max(0.3, 1 - (state.age - 20) * 0.006); }
@@ -369,43 +352,26 @@
     return mul;
   }
 
-  function getBaseCultivateGain() {
-    return Math.floor((4 + state.realmIndex * 2.5) * (0.8 + Math.random() * 0.4) * getCultivateMultiplier());
-  }
+  function getBaseCultivateGain() { return Math.floor((4 + state.realmIndex * 2.5) * (0.8 + Math.random() * 0.4) * getCultivateMultiplier()); }
 
   function showModal(html) { hideModal(); const overlay = document.createElement('div'); overlay.className='modal-overlay'; const box = document.createElement('div'); box.className='modal-box'; box.innerHTML=html; overlay.appendChild(box); document.getElementById('modalContainer').appendChild(overlay); }
   function hideModal() { document.getElementById('modalContainer').innerHTML=''; }
 
   function startNewGame() {
-    showModal(`
-      <h3>选择性别</h3>
-      <div><span class="gender-option" data-gender="male">男</span><span class="gender-option" data-gender="female">女</span></div>
-      <button class="btn" id="confirmGenderBtn" disabled>确定</button>
-    `);
-    let selectedGender = null;
-    document.querySelectorAll('.gender-option').forEach(opt => {
-      opt.addEventListener('click', ()=>{
-        document.querySelectorAll('.gender-option').forEach(o=>o.classList.remove('selected'));
-        opt.classList.add('selected');
-        selectedGender = opt.dataset.gender;
-        document.getElementById('confirmGenderBtn').disabled = false;
-      });
-    });
+    showModal(`<h3>选择性别</h3><div><span class="gender-option" data-gender="male">男</span><span class="gender-option" data-gender="female">女</span></div><button class="btn" id="confirmGenderBtn" disabled>确定</button>`);
+    let sel = null;
+    document.querySelectorAll('.gender-option').forEach(o => o.addEventListener('click', ()=>{
+      document.querySelectorAll('.gender-option').forEach(x=>x.classList.remove('selected')); o.classList.add('selected');
+      sel = o.dataset.gender; document.getElementById('confirmGenderBtn').disabled = false;
+    }));
     document.getElementById('confirmGenderBtn').addEventListener('click', ()=>{
-      state.gender = selectedGender;
-      hideModal();
-      showModal(`
-        <h3>道号</h3>
-        <input type="text" id="nameInput" placeholder="请输入道号" value="无名修士" maxlength="8">
-        <br><button class="btn" id="confirmNameBtn">踏入仙途</button>
-      `);
+      state.gender = sel; hideModal();
+      showModal(`<h3>道号</h3><input type="text" id="nameInput" value="无名修士" maxlength="8"><br><button class="btn" id="confirmNameBtn">踏入仙途</button>`);
       document.getElementById('confirmNameBtn').addEventListener('click', ()=>{
-        state.playerName = document.getElementById('nameInput').value.trim() || '无名修士';
+        state.playerName = document.getElementById('nameInput').value.trim()||'无名修士';
         state.spiritualRoot = Object.keys(ROOTS)[Math.floor(Math.random()*5)];
         state.baseBreakRate = 5 + Math.floor(Math.random()*16);
-        hideModal();
-        generateMonsters(); recalcStats(); state.hp = state.maxHp;
-        updateUI(); saveGame();
+        hideModal(); generateMonsters(); recalcStats(); state.hp = state.maxHp; updateUI(); saveGame();
       });
     });
   }
@@ -414,67 +380,113 @@
     if (state.partner) return;
     const names = ["紫霞仙子","白素贞","柳梦璃","云韵","彩蝶"];
     const def = names[Math.floor(Math.random()*names.length)];
-    showModal(`<h3>结为道侣</h3><p>赐名：</p><input type="text" id="partnerNameInput" value="${def}" maxlength="8"><br><button class="btn" id="confirmPartnerBtn">确定</button>`);
+    showModal(`<h3>结为道侣</h3><p>赐名：</p><input type="text" id="pName" value="${def}" maxlength="8"><br><button class="btn" id="confirmPartnerBtn">确定</button>`);
     document.getElementById('confirmPartnerBtn').addEventListener('click', ()=>{
-      const name = document.getElementById('partnerNameInput').value.trim() || def;
-      state.partner = { name, intimacy:20, attackBonus:3+state.realmIndex*2, speedBonus:0.05+state.realmIndex*0.02 };
-      hideModal(); recalcStats(); addLog(`结识道侣【${name}】`); updateUI(); saveGame();
+      const n = document.getElementById('pName').value.trim()||def;
+      state.partner = { name:n, intimacy:20, attackBonus:3+state.realmIndex*2, speedBonus:0.05+state.realmIndex*0.02 };
+      hideModal(); recalcStats(); addLog(`结识道侣【${n}】`); updateUI(); saveGame();
     });
   }
 
   function triggerBreakthroughEffect() {
-    const container = document.getElementById('gameContainer'); container.classList.add('breakthrough-glow');
-    setTimeout(()=>container.classList.remove('breakthrough-glow'),1500);
-    const text = document.createElement('div');
-    text.style.position='fixed'; text.style.top='50%'; text.style.left='50%';
-    text.style.transform='translate(-50%,-50%)'; text.style.fontSize='2rem';
-    text.style.color='gold'; text.style.fontWeight='bold'; text.style.zIndex='999';
-    text.textContent='突破！'; document.body.appendChild(text);
-    setTimeout(()=>text.remove(),1500);
+    const c = document.getElementById('gameContainer'); c.classList.add('breakthrough-glow');
+    setTimeout(()=>c.classList.remove('breakthrough-glow'),1500);
+    const t = document.createElement('div');
+    t.style.position='fixed'; t.style.top='50%'; t.style.left='50%'; t.style.transform='translate(-50%,-50%)';
+    t.style.fontSize='2rem'; t.style.color='gold'; t.style.fontWeight='bold'; t.style.zIndex='999'; t.textContent='突破！';
+    document.body.appendChild(t); setTimeout(()=>t.remove(),1500);
   }
 
   function hpDeathPenalty() {
     addLog("重伤昏迷！修为损失10%，寿元上限减少5年");
-    state.cultivation = Math.floor(state.cultivation * 0.9);
-    reduceMaxAge(5);
-    state.hp = state.maxHp;
+    state.cultivation = Math.floor(state.cultivation * 0.9); reduceMaxAge(5); state.hp = state.maxHp;
   }
 
-  // 法宝系统
-  function addTreasure(treasure) {
-    state.treasures.push({...treasure});
-    addLog(`获得法宝【${treasure.name}】`);
-    if (state.equippedTreasureIndex === -1) {
-      state.equippedTreasureIndex = state.treasures.length - 1;
-      addLog(`自动装备【${treasure.name}】`);
-    }
+  function addTreasure(t) {
+    state.treasures.push({...t}); addLog(`获得法宝【${t.name}】`);
+    if (state.equippedTreasureIndex === -1) { state.equippedTreasureIndex = state.treasures.length - 1; addLog(`自动装备【${t.name}】`); }
     recalcStats(); updateUI(); saveGame();
   }
 
   function showTreasureSelect() {
-    if (state.treasures.length === 0) { addLog("没有任何法宝"); return; }
-    showModal(`
-      <h3>选择装备的法宝</h3>
-      <div class="treasure-select" id="treasureList"></div>
-      <button class="btn" id="confirmTreasureBtn">关闭</button>
-    `);
-    const listDiv = document.getElementById('treasureList');
-    state.treasures.forEach((t, idx) => {
+    if (state.treasures.length===0) { addLog("没有任何法宝"); return; }
+    showModal(`<h3>选择装备的法宝</h3><div class="treasure-select" id="treasureList"></div><button class="btn" id="confirmTreasureBtn">关闭</button>`);
+    const list = document.getElementById('treasureList');
+    state.treasures.forEach((t,i) => {
       const item = document.createElement('div');
-      item.className = 'treasure-item' + (idx === state.equippedTreasureIndex ? ' equipped' : '');
+      item.className = 'treasure-item' + (i===state.equippedTreasureIndex?' equipped':'');
       item.textContent = `${t.name} (攻+${t.atk} 灵+${t.spirit})`;
-      item.addEventListener('click', () => {
-        state.equippedTreasureIndex = idx;
-        recalcStats(); updateUI(); saveGame();
-        hideModal();
-        addLog(`装备法宝【${t.name}】`);
+      item.addEventListener('click', ()=>{
+        state.equippedTreasureIndex = i; recalcStats(); updateUI(); saveGame(); hideModal(); addLog(`装备法宝【${t.name}】`);
       });
-      listDiv.appendChild(item);
+      list.appendChild(item);
     });
     document.getElementById('confirmTreasureBtn').addEventListener('click', hideModal);
   }
 
-  // 修炼操作
+  // 海量事件池
+  const eventPool = {
+    cultivate: [
+      { d:"灵气逆乱，经脉刺痛", o:[ { t:"强行运功(-20灵力,+40修为)", a:()=>{ if(state.spirit>=20){ state.spirit-=20; state.cultivation+=40; addLog("运功成功"); } else addLog("灵力不足"); } }, { t:"静待平息", a:()=>addLog("放弃修炼") } ] },
+      { d:"识海浮现远古符文", o:[ { t:"参悟(+60修为,寿限-2)", a:()=>{ state.cultivation+=60; reduceMaxAge(2); addLog("参悟符文"); } }, { t:"记录(+10修为)", a:()=>{ state.cultivation+=10; addLog("修为+10"); } } ] },
+      { d:"天降灵雨，灵力充沛", o:[ { t:"全力吸收(+80修为)", a:()=>{ state.cultivation+=80; addLog("修为大增"); } }, { t:"小心提防", a:()=>{ state.cultivation+=20; addLog("修为+20"); } } ] },
+      { d:"心魔幻化挚爱", o:[ { t:"斩情(+50修为,亲密度-10)", a:()=>{ if(state.partner) state.partner.intimacy-=10; state.cultivation+=50; addLog("斩断情丝"); } }, { t:"深陷(-10修为)", a:()=>{ state.cultivation-=10; addLog("修为倒退"); } } ] },
+      { d:"灵根异动", o:[ { t:"引导(+100修为,灵根重置)", a:()=>{ state.spiritualRoot=Object.keys(ROOTS)[Math.floor(Math.random()*5)]; state.cultivation+=100; recalcStats(); addLog("灵根重塑"); } }, { t:"压制(+20修为)", a:()=>{ state.cultivation+=20; addLog("修为+20"); } } ] },
+      { d:"古籍残页", o:[ { t:"修习(+70修为)", a:()=>{ state.cultivation+=70; addLog("修习古籍"); } }, { t:"出售(+30灵石)", a:()=>{ state.stones+=30; addLog("灵石+30"); } } ] },
+      { d:"雷云凝聚", o:[ { t:"提前渡劫(突破率+5%,寿限-3)", a:()=>{ state.breakBoost+=5; reduceMaxAge(3); addLog("天劫预兆"); } }, { t:"躲避", a:()=>addLog("继续修炼") } ] },
+      { d:"灵台清明", o:[ { t:"深度感悟(+90修为)", a:()=>{ state.cultivation+=90; addLog("感悟大道"); } }, { t:"浅尝(+30修为)", a:()=>{ state.cultivation+=30; addLog("修为+30"); } } ] },
+      { d:"丹毒发作", o:[ { t:"运功逼毒(-30灵力,+50修为)", a:()=>{ if(state.spirit>=30){ state.spirit-=30; state.cultivation+=50; addLog("逼毒成功"); } else addLog("灵力不足"); } }, { t:"吞服草药(药材-2)", a:()=>{ if(state.herb>=2){ state.herb-=2; addLog("以草药镇压"); } else addLog("药材不足"); } } ] },
+      { d:"祖师托梦", o:[ { t:"接受传承(+120修为)", a:()=>{ state.cultivation+=120; addLog("传承修为"); } }, { t:"婉拒", a:()=>{ state.cultivation+=20; addLog("自行领悟"); } } ] },
+      { d:"星辰之力降临", o:[ { t:"引星入体(攻击+5永久)", a:()=>{ state.baseAttack+=5; addLog("攻击永久+5"); recalcStats(); } }, { t:"吸收星力(+50修为)", a:()=>{ state.cultivation+=50; addLog("修为+50"); } } ] },
+      { d:"顿悟剑意", o:[ { t:"精研剑道(攻击+3)", a:()=>{ state.manuals.atk.bonus+=3; recalcStats(); addLog("攻击提升"); } }, { t:"继续修炼", a:()=>{ state.cultivation+=20; addLog("修为+20"); } } ] },
+      { d:"时空裂隙", o:[ { t:"冒险进入(随机穿越至秘境)", a:()=>{ secretExplore(); } }, { t:"避开", a:()=>addLog("裂隙消失") } ] },
+      { d:"幽冥鬼火", o:[ { t:"炼化鬼火(+40灵力上限)", a:()=>{ state.maxSpirit+=40; addLog("灵力上限+40"); recalcStats(); } }, { t:"驱散", a:()=>addLog("鬼火消散") } ] }
+    ],
+    wild: [
+      { d:"受伤散修", o:[ { t:"救治(-20灵石,+80修为)", a:()=>{ if(state.stones>=20){ state.stones-=20; state.cultivation+=80; addLog("救治散修"); } else addLog("灵石不足"); } }, { t:"劫掠(+40灵石,寿限-3)", a:()=>{ state.stones+=40; reduceMaxAge(3); addLog("劫掠"); } }, { t:"离开", a:()=>addLog("离去") } ] },
+      { d:"废弃矿坑", o:[ { t:"挖掘(+50灵石)", a:()=>{ state.stones+=50; addLog("灵石+50"); } }, { t:"深入(灵力-20,+80灵石)", a:()=>{ if(state.spirit>=20){ state.spirit-=20; state.stones+=80; addLog("深入矿坑"); } else addLog("灵力不足"); } } ] },
+      { d:"仙鹤引路", o:[ { t:"跟随(进入秘境)", a:()=>{ secretExplore(); } }, { t:"不理", a:()=>addLog("仙鹤离去") } ] },
+      { d:"强盗拦路", o:[ { t:"战斗(生命-20,灵石+60)", a:()=>{ state.hp=Math.max(0,state.hp-20); state.stones+=60; if(state.hp<=0) hpDeathPenalty(); addLog("击退强盗"); } }, { t:"交钱(-30灵石)", a:()=>{ if(state.stones>=30){ state.stones-=30; addLog("交钱保命"); } else addLog("灵石不足"); } } ] },
+      { d:"山崖奇花", o:[ { t:"采摘(药材+3,生命-10)", a:()=>{ state.herb+=3; state.hp=Math.max(0,state.hp-10); if(state.hp<=0) hpDeathPenalty(); addLog("采得药材"); } }, { t:"放弃", a:()=>addLog("继续前行") } ] },
+      { d:"古修遗物", o:[ { t:"开启(随机法宝)", a:()=>{ const t=TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); } }, { t:"不碰", a:()=>addLog("谨慎离开") } ] },
+      { d:"妖兽巢穴", o:[ { t:"偷蛋(灵石+80,生命-30)", a:()=>{ state.stones+=80; state.hp=Math.max(0,state.hp-30); if(state.hp<=0) hpDeathPenalty(); addLog("偷蛋成功"); } }, { t:"避开", a:()=>addLog("绕道") } ] },
+      { d:"迷阵", o:[ { t:"破阵(灵力-15,修为+40)", a:()=>{ if(state.spirit>=15){ state.spirit-=15; state.cultivation+=40; addLog("破阵成功"); } else addLog("灵力不足"); } }, { t:"退出", a:()=>addLog("退出迷阵") } ] }
+    ],
+    sect: [
+      { d:"宗门大比", o:[ { t:"参加(-15灵力)", a:()=>{ if(state.spirit<15) return; state.spirit-=15; if(Math.random()<0.6){ state.contribution+=5; state.stones+=20; addLog("大比获胜"); } else { state.spirit-=10; addLog("落败"); } } }, { t:"放弃", a:()=>addLog("弃权") } ] },
+      { d:"长老传功", o:[ { t:"接受(+30修为)", a:()=>{ state.cultivation+=30; addLog("传功"); } }, { t:"拒绝", a:()=>addLog("婉拒") } ] },
+      { d:"护法任务", o:[ { t:"巡逻(贡献+8)", a:()=>{ state.contribution+=8; addLog("巡逻完成"); } }, { t:"偷懒", a:()=>{ state.contribution-=2; addLog("被罚"); } } ] },
+      { d:"炼丹堂求助", o:[ { t:"协助(药材+2,贡献+5)", a:()=>{ state.herb+=2; state.contribution+=5; addLog("协助炼丹"); } }, { t:"拒绝", a:()=>addLog("拒绝") } ] }
+    ],
+    secret: [
+      { d:"古老祭坛", o:[ { t:"献祭(-30灵石,+100修为)", a:()=>{ if(state.stones>=30){ state.stones-=30; state.cultivation+=100; addLog("献祭成功"); } else addLog("灵石不足"); } }, { t:"摧毁(+50灵石)", a:()=>{ state.stones+=50; addLog("摧毁祭坛"); } } ] },
+      { d:"传送阵", o:[ { t:"激活(-30灵力,修为+80)", a:()=>{ if(state.spirit>=30){ state.spirit-=30; state.cultivation+=80; addLog("传送灵界"); } else addLog("灵力不足"); } }, { t:"离开", a:()=>addLog("离开") } ] },
+      { d:"守护兽", o:[ { t:"战斗(-15灵力)", a:()=>{ if(state.spirit<15) return; state.spirit-=15; state.hp=Math.max(0,state.hp-20); if(Math.random()<0.5){ state.stones+=60; addLog("击败守护兽"); } if(state.hp<=0) hpDeathPenalty(); } }, { t:"逃跑", a:()=>{ reduceMaxAge(4); addLog("逃跑，寿限-4"); } } ] }
+    ],
+    dual: [
+      { d:"道侣突破", o:[ { t:"辅助(-30灵力,道侣攻击+5)", a:()=>{ if(state.spirit>=30){ state.spirit-=30; if(state.partner) state.partner.attackBonus+=5; recalcStats(); addLog("道侣突破"); } else addLog("灵力不足"); } }, { t:"静观", a:()=>addLog("观望") } ] }
+    ],
+    master: [
+      { d:"师尊闭关", o:[ { t:"护法(-20灵力,恩义+10)", a:()=>{ if(state.spirit>=20){ state.spirit-=20; state.masterFavor+=10; addLog("护法有功"); } else addLog("灵力不足"); } }, { t:"自行修炼", a:()=>{ state.cultivation+=20; addLog("独自修炼"); } } ] }
+    ]
+  };
+
+  function triggerEvent(type) {
+    state.eventActive = true;
+    const pool = eventPool[type] || eventPool.cultivate;
+    const ev = pool[Math.floor(Math.random() * pool.length)];
+    document.getElementById('eventDesc').textContent = ev.d;
+    const optDiv = document.getElementById('eventOptions'); optDiv.innerHTML = '';
+    ev.o.forEach(o => {
+      const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = o.t;
+      btn.addEventListener('click', ()=>{ o.a(); endEvent(); });
+      optDiv.appendChild(btn);
+    });
+    document.getElementById('eventPanel').style.display = 'block';
+  }
+
+  function endEvent() { state.eventActive = false; document.getElementById('eventPanel').style.display = 'none'; updateUI(); }
+
   function cultivate() {
     if (state.spirit < 5) { addLog("灵力不足"); return; }
     state.spirit -= 4;
@@ -492,8 +504,7 @@
     if (state.subRealm >= 2) { addLog("已是后期，需渡劫突破大境界"); return; }
     const cost = getSubRealmCost();
     if (state.cultivation < cost) { addLog(`需要${cost}修为突破小境界`); return; }
-    state.cultivation -= cost;
-    state.subRealm++;
+    state.cultivation -= cost; state.subRealm++;
     recalcStats(); state.hp = state.maxHp;
     addLog(`突破至${REALMS[state.realmIndex].name}·${['前期','中期','后期'][state.subRealm]}，攻击提升至${state.baseAttack}`);
     updateUI();
@@ -512,18 +523,15 @@
       if (state.realmIndex === 6) state.flyTimeLeft = 1000;
       state.baseBreakRate = 5 + Math.floor(Math.random() * 16);
       recalcStats(); state.hp = state.maxHp;
-      addLog(`渡劫成功！踏入${REALMS[state.realmIndex].name}·前期，攻击暴涨至${state.baseAttack}，寿元上限${state.maxAge}`);
+      addLog(`渡劫成功！踏入${REALMS[state.realmIndex].name}·前期，攻击暴涨至${state.baseAttack}`);
       triggerBreakthroughEffect();
-      state.cultivation = Math.floor(state.cultivation * 0.1);
-      state.spirit = state.maxSpirit;
+      state.cultivation = Math.floor(state.cultivation * 0.1); state.spirit = state.maxSpirit;
       generateMonsters();
       if (state.hasMaster) { state.masterFavor += 5; addLog("师尊欣慰"); }
       if (!state.partner && Math.random() < 0.4) createPartner();
     } else {
       reduceMaxAge(10);
-      state.spirit = Math.floor(state.spirit * 0.5);
-      state.cultivation = Math.floor(state.cultivation * 0.4);
-      state.hp = Math.floor(state.hp * 0.5);
+      state.spirit = Math.floor(state.spirit * 0.5); state.cultivation = Math.floor(state.cultivation * 0.4); state.hp = Math.floor(state.hp * 0.5);
       addLog(`渡劫失败！寿元上限-10，灵力与生命大损`);
     }
     if (!consumeYears(0.8)) return;
@@ -556,8 +564,7 @@
     state.stones -= 18; state.herb -= 2;
     if (Math.random() < 0.85) {
       let gain = Math.floor((45 + state.realmIndex * 15) * (0.9 + Math.random() * 0.2));
-      state.cultivation += gain;
-      addLog(`炼丹成功，修为+${gain}`);
+      state.cultivation += gain; addLog(`炼丹成功，修为+${gain}`);
     } else addLog("丹炉炸裂");
     consumeYears(0.4); updateUI();
   }
@@ -567,15 +574,15 @@
     if (state.spirit < 15) { addLog("灵力不足"); return; }
     state.spirit -= 15;
     let base = getBaseCultivateGain();
-    let multiplier = 1.5 + Math.random() * 0.7;
-    let gain = Math.floor(base * multiplier);
-    state.cultivation += gain;
-    state.partner.intimacy += 5;
+    let mult = 1.5 + Math.random() * 0.7;
+    let gain = Math.floor(base * mult);
+    state.cultivation += gain; state.partner.intimacy += 5;
     state.hp = Math.min(state.maxHp, state.hp + Math.floor(state.maxHp * 0.1));
-    addLog(`双修 +${gain}修为 (${Math.floor(multiplier*100)}%效率)`);
+    addLog(`双修 +${gain}修为 (${Math.floor(mult*100)}%效率)`);
     if (state.partner.intimacy >= 100 && state.partner.attackBonus < 25) {
       state.partner.attackBonus += 5; recalcStats(); addLog("道侣突破，攻击+5");
     }
+    if (Math.random() < 0.15) triggerEvent('dual');
     consumeYears(1.0); updateUI();
   }
 
@@ -584,10 +591,11 @@
     if (state.stones < 20) { addLog("灵石不足"); return; }
     state.stones -= 20;
     let base = getBaseCultivateGain();
-    let multiplier = 1.4 + Math.random() * 0.6;
-    let gain = Math.floor(base * multiplier);
+    let mult = 1.4 + Math.random() * 0.6;
+    let gain = Math.floor(base * mult);
     state.cultivation += gain; state.masterFavor += 2;
-    addLog(`请教 +${gain}修为 (${Math.floor(multiplier*100)}%效率)`);
+    addLog(`请教 +${gain}修为 (${Math.floor(mult*100)}%效率)`);
+    if (Math.random() < 0.15) triggerEvent('master');
     consumeYears(0.5); updateUI();
   }
 
@@ -595,9 +603,8 @@
     if (!state.sectName) { addLog("无宗门"); return; }
     if (state.spirit < 10) { addLog("灵力不足"); return; }
     state.spirit -= 10;
-    let r = Math.random();
-    if (r < 0.5) { state.contribution += 2+Math.floor(Math.random()*4); state.stones += 5+state.realmIndex*3; addLog("任务完成"); }
-    else if (r < 0.8) { state.contribution += 3; addLog("普通任务"); }
+    if (Math.random() < 0.5) { state.contribution+=2+Math.floor(Math.random()*4); state.stones+=5+state.realmIndex*3; addLog("任务完成"); }
+    else if (Math.random() < 0.8) { state.contribution+=3; addLog("普通任务"); }
     else { triggerEvent('sect'); return; }
     consumeYears(0.3); updateUI();
   }
@@ -608,8 +615,8 @@
   }
 
   function sectGuard() {
-    if (!state.sectName||state.usedGuardThisRealm||state.stones<30||state.contribution<10) return;
-    state.stones -= 30; state.contribution -= 10; state.usedGuardThisRealm = true;
+    if (!state.sectName || state.guardUsedTotal >= 1 || state.stones < 30 || state.contribution < 10) return;
+    state.stones -= 30; state.contribution -= 10; state.guardUsedTotal = 1;
     state.breakBoost += 10; addLog("护法加持，突破率+10%"); updateUI();
   }
 
@@ -635,143 +642,75 @@
     updateMonsterUI(); updateUI();
   }
 
-  function adventure(double = false) {
+  function adventure(double=false) {
     if (state.eventActive) return;
-    let cost = double ? 15 : 8;
+    let cost = double?15:8;
     if (state.spirit < cost) { addLog("灵力不足"); return; }
     state.spirit -= cost;
     let logs = [];
-    for (let i = 0; i < (double ? 2 : 1); i++) {
+    for (let i=0;i<(double?2:1);i++) {
       let r = Math.random();
       if (r < 0.3 && !state.hasMaster) {
-        const masters = ["青云真人","酒剑仙","丹霞长老"];
-        state.hasMaster = true; state.masterName = masters[Math.floor(Math.random()*masters.length)];
-        state.attackBonusFromMaster = 4 + state.realmIndex*3; recalcStats();
+        const masters=["青云真人","酒剑仙","丹霞长老"];
+        state.hasMaster=true; state.masterName=masters[Math.floor(Math.random()*masters.length)];
+        state.attackBonusFromMaster=4+state.realmIndex*3; recalcStats();
         logs.push(`拜师【${state.masterName}】`);
       } else if (r < 0.55 && !state.sectName) {
-        const sects = ["玄天宗","万剑门","碧落宫"];
-        state.sectName = sects[Math.floor(Math.random()*sects.length)];
-        state.stones += 25 + state.realmIndex*10;
+        const sects=["玄天宗","万剑门","碧落宫"];
+        state.sectName=sects[Math.floor(Math.random()*sects.length)];
+        state.stones+=25+state.realmIndex*10;
         logs.push(`加入${state.sectName}`);
       } else if (r < 0.75) {
-        let s = 15+state.realmIndex*8, c = 6+state.realmIndex*3;
-        state.stones += s; state.cultivation += c;
+        let s=15+state.realmIndex*8, c=6+state.realmIndex*3;
+        state.stones+=s; state.cultivation+=c;
         if (Math.random()<0.4) state.herb++;
         logs.push(`灵石+${s}，修为+${c}`);
       } else if (r < 0.9) {
-        let s = 20+state.realmIndex*10; state.stones += s; logs.push(`灵石+${s}`);
+        let s=20+state.realmIndex*10; state.stones+=s; logs.push(`灵石+${s}`);
       } else {
-        let loss = 10+Math.floor(Math.random()*15);
-        state.spirit = Math.max(0, state.spirit - loss);
-        state.hp = Math.max(0, state.hp - Math.floor(loss*1.5));
+        let loss=10+Math.floor(Math.random()*15);
+        state.spirit=Math.max(0,state.spirit-loss);
+        state.hp=Math.max(0,state.hp-Math.floor(loss*1.5));
         logs.push(`遇险，灵力-${loss}`);
-        if (state.hp <= 0) hpDeathPenalty();
+        if (state.hp<=0) hpDeathPenalty();
       }
       if (!state.partner && Math.random()<0.2) createPartner();
     }
     if (logs.length) addLog(`云游：${logs.join('；')}`);
     if (!double && Math.random()<0.35) triggerEvent('wild');
-    recalcStats();
-    if (!consumeYears(double?0.8:0.5)) return;
+    recalcStats(); if (!consumeYears(double?0.8:0.5)) return;
     updateUI();
   }
-
-  function triggerEvent(type) {
-    state.eventActive = true;
-    let events = [];
-    if (type === 'cultivate') {
-      events = [
-        { desc:"修炼中突然顿悟！", opts:[
-          { text:"全力参悟(+50修为)", action:()=>{ state.cultivation+=50; addLog("顿悟成功，修为+50"); endEvent(); }},
-          { text:"保持平常心", action:()=>{ state.cultivation+=20; addLog("修为+20"); endEvent(); }}
-        ]},
-        { desc:"心魔骤起", opts:[
-          { text:"压制(-15灵力)", action:()=>{ if(state.spirit>=15){ state.spirit-=15; state.cultivation+=30; addLog("压制心魔，修为+30"); } else addLog("灵力不足"); endEvent(); }},
-          { text:"放弃", action:()=>{ addLog("中断修炼"); endEvent(); }}
-        ]}
-      ];
-    } else if (type === 'wild') {
-      events = [
-        { desc:"路遇受伤修士", opts:[
-          { text:"救助(-15灵石)", action:()=>{ if(state.stones>=15){ state.stones-=15; state.cultivation+=60; addLog("修为+60，灵石-15"); } else addLog("灵石不足"); endEvent(); }},
-          { text:"劫杀(+25灵石，寿限-5)", action:()=>{ state.stones+=25; reduceMaxAge(5); addLog("劫杀，寿元上限-5"); endEvent(); }},
-          { text:"无视", action:()=>{ addLog("径自离去"); endEvent(); }}
-        ]}
-      ];
-    } else if (type === 'sect') {
-      events = [
-        { desc:"宗门大比", opts:[
-          { text:"参加(-15灵力)", action:()=>{ if(state.spirit<15){ addLog("灵力不足"); endEvent(); return; } state.spirit-=15; if(Math.random()<0.6){ state.contribution+=5; state.stones+=20; addLog("大比获胜，贡献+5"); } else { state.spirit-=10; addLog("落败"); } endEvent(); }},
-          { text:"放弃", action:()=>{ addLog("放弃大比"); endEvent(); }}
-        ]}
-      ];
-    }
-    if (!events.length) { endEvent(); return; }
-    const ev = events[Math.floor(Math.random()*events.length)];
-    document.getElementById('eventDesc').textContent = ev.desc;
-    const optDiv = document.getElementById('eventOptions'); optDiv.innerHTML = '';
-    ev.opts.forEach(o => {
-      const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = o.text;
-      btn.addEventListener('click', o.action); optDiv.appendChild(btn);
-    });
-    document.getElementById('eventPanel').style.display = 'block';
-  }
-
-  function endEvent() { state.eventActive = false; document.getElementById('eventPanel').style.display = 'none'; updateUI(); }
 
   function secretExplore() {
     if (state.spirit < 20) { addLog("灵力不足"); return; }
     state.spirit -= 20;
     let r = Math.random();
-    if (r < 0.2) { triggerSecretEvent(); return; }
-    else if (r < 0.4) { let s = 40+state.realmIndex*15; state.stones += s; addLog(`秘境灵石+${s}`); }
-    else if (r < 0.6) { let gain = 25+state.realmIndex*10; state.cultivation += gain; addLog(`秘境悟道，修为+${gain}`); }
-    else if (r < 0.8) { const t = TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); }
-    else if (r < 0.95) { state.herb += 3; addLog("药材+3"); }
-    else { state.hp = Math.max(0, state.hp-30); reduceMaxAge(5); addLog("秘境遇险，寿元上限-5"); if(state.hp<=0) hpDeathPenalty(); }
+    if (r < 0.2) { triggerEvent('secret'); return; }
+    else if (r < 0.4) { let s=40+state.realmIndex*15; state.stones+=s; addLog(`秘境灵石+${s}`); }
+    else if (r < 0.6) { let g=25+state.realmIndex*10; state.cultivation+=g; addLog(`秘境悟道，修为+${g}`); }
+    else if (r < 0.8) { const t=TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); }
+    else if (r < 0.95) { state.herb+=3; addLog("药材+3"); }
+    else { state.hp=Math.max(0,state.hp-30); reduceMaxAge(5); addLog("秘境遇险，寿限-5"); if(state.hp<=0) hpDeathPenalty(); }
     if (!state.partner && Math.random()<0.2) createPartner();
     if (!consumeYears(1.2)) return;
     updateUI();
   }
 
-  function triggerSecretEvent() {
-    state.eventActive = true;
-    document.getElementById('eventPanel').style.display = 'block';
-    const events = [
-      { desc:"上古传送阵", opts:[
-        { text:"激活(-30灵力,修为+80)", action:()=>{ if(state.spirit>=30){ state.spirit-=30; state.cultivation+=80; addLog("传送灵界，修为+80"); } else addLog("灵力不足"); endSecretEvent(); }},
-        { text:"离开", action:()=>{ addLog("离开"); endSecretEvent(); }}
-      ]},
-      { desc:"秘境守护兽", opts:[
-        { text:"战斗(-15灵力)", action:()=>{ if(state.spirit<15){ addLog("灵力不足"); endSecretEvent(); return; } state.spirit-=15; state.hp=Math.max(0,state.hp-20); if(Math.random()<0.5){ state.stones+=60; addLog("击败守护兽"); } if(state.hp<=0) hpDeathPenalty(); endSecretEvent(); }},
-        { text:"逃跑", action:()=>{ reduceMaxAge(4); addLog("逃跑，寿元上限-4"); endSecretEvent(); }}
-      ]}
-    ];
-    const ev = events[Math.floor(Math.random()*events.length)];
-    document.getElementById('eventDesc').textContent = ev.desc;
-    const optDiv = document.getElementById('eventOptions'); optDiv.innerHTML = '';
-    ev.opts.forEach(o => {
-      const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = o.text;
-      btn.addEventListener('click', o.action); optDiv.appendChild(btn);
-    });
-  }
-
-  function endSecretEvent() { state.eventActive = false; document.getElementById('eventPanel').style.display = 'none'; updateUI(); }
-
-  function buyBreakPill(){ if(state.stones<30) return; state.stones-=30; state.breakBoost = Math.min(50, state.breakBoost+10); addLog("破境丹，突破率+10%"); updateUI(); }
+  // 坊市购买
+  function buyBreakPill(){ if(state.stones<30||state.breakPillUsed>=3) return; state.stones-=30; state.breakPillUsed++; state.breakBoost=Math.min(50,state.breakBoost+10); addLog("破境丹，突破率+10%"); updateUI(); }
   function buySpiritPill(){ if(state.stones<15) return; state.stones-=15; state.spirit=Math.min(state.maxSpirit,state.spirit+40); addLog("回灵丹"); updateUI(); }
   function buyLifeFruit(){ if(state.stones<40) return; state.stones-=40; state.maxAge+=8; addLog("寿元果，寿限+8"); updateUI(); }
   function buyHerb(){ if(state.stones<200) return; state.stones-=200; state.herb++; addLog("药材+1"); updateUI(); }
   function buyAtkManual(){ if(state.stones<50) return; state.stones-=50; let add=2+Math.floor(Math.random()*5); state.manuals.atk.level++; state.manuals.atk.bonus+=add; recalcStats(); addLog(`攻击功法+${add}`); updateUI(); }
   function buySpdManual(){ if(state.stones<50) return; state.stones-=50; let add=2+Math.floor(Math.random()*4); state.manuals.spd.level++; state.manuals.spd.bonus+=add; recalcStats(); addLog(`修炼功法+${add}%`); updateUI(); }
   function buySpiritManual(){ if(state.stones<50) return; state.stones-=50; let add=5+Math.floor(Math.random()*8); state.manuals.spirit.level++; state.manuals.spirit.bonus+=add; recalcStats(); addLog(`灵力功法+${add}`); updateUI(); }
-  function buyTreasure(){ if(state.stones<50) return; state.stones-=50; const t = TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); }
+  function buyTreasure(){ if(state.stones<50) return; state.stones-=50; const t=TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); }
 
   function renamePlayer() {
     showModal(`<h3>修改道号</h3><input type="text" id="renameInput" value="${state.playerName}" maxlength="8"><br><button class="btn" id="confirmRenameBtn">确定</button>`);
     document.getElementById('confirmRenameBtn').onclick = ()=>{ const n=document.getElementById('renameInput').value.trim(); if(n){ state.playerName=n; addLog(`道号更改为【${n}】`); } hideModal(); updateUI(); saveGame(); };
   }
-
   function renamePartner() {
     if(!state.partner) return;
     showModal(`<h3>道侣改名</h3><input type="text" id="renamePartnerInput" value="${state.partner.name}" maxlength="8"><br><button class="btn" id="confirmRenamePartnerBtn">确定</button>`);
@@ -797,16 +736,18 @@
     state.eventActive = false;
   }
 
-  function saveGame() { try { localStorage.setItem('xiuxian_final_v4', JSON.stringify(state)); } catch(e) {} }
+  function saveGame() { try { localStorage.setItem('xiuxian_final_v5', JSON.stringify(state)); } catch(e) {} }
   function loadGame() {
     try {
-      const saved = localStorage.getItem('xiuxian_final_v4');
+      const saved = localStorage.getItem('xiuxian_final_v5');
       if (saved) {
         state = JSON.parse(saved);
         if (!state.treasures) state.treasures = [];
         if (state.equippedTreasureIndex === undefined) state.equippedTreasureIndex = -1;
         if (!state.manuals?.atk) state.manuals = { atk:{level:0,bonus:0}, spd:{level:0,bonus:0}, spirit:{level:0,bonus:0} };
         if (state.baseBreakRate === undefined) state.baseBreakRate = 15;
+        if (state.breakPillUsed === undefined) state.breakPillUsed = 0;
+        if (state.guardUsedTotal === undefined) state.guardUsedTotal = 0;
         if (!state.gender) state.gender = 'male';
         if (!state.monsters?.length) generateMonsters();
         recalcStats();
@@ -831,10 +772,8 @@
     document.getElementById('breakRateDisplay').textContent = getTotalBreakRate() + '%';
     document.getElementById('contribValue').textContent = state.contribution;
     document.getElementById('sectInfo').textContent = state.sectName ? `${state.sectName}弟子` : '散修';
-    document.getElementById('sectSalaryBtn').disabled = (state.contribution < 5);
-    document.getElementById('sectGuardBtn').disabled = (!state.sectName || state.usedGuardThisRealm || state.stones<30 || state.contribution<10);
 
-    // 寿命/飞升显示
+    // 寿命显示
     const ageStat = document.getElementById('ageStat');
     if (state.realmIndex >= 6) {
       ageStat.innerHTML = `寿元 <span>无尽</span>`;
@@ -843,6 +782,11 @@
       document.getElementById('ageValue').textContent = Math.floor(state.age);
       document.getElementById('maxAgeDisplay').textContent = isFinite(state.maxAge) ? state.maxAge : '∞';
     }
+
+    // 破境丹/护法次数
+    document.getElementById('breakPillUsed').textContent = state.breakPillUsed;
+    document.getElementById('sectGuardBtn').disabled = (!state.sectName || state.guardUsedTotal >= 1 || state.stones<30 || state.contribution<10);
+    document.getElementById('sectSalaryBtn').disabled = (state.contribution < 5);
 
     let needed = state.subRealm < 2 ? getSubRealmCost() : getBreakNeed();
     document.getElementById('progressText').textContent = `${state.cultivation}/${needed}`;
@@ -864,9 +808,9 @@
 
     const m = state.manuals;
     let parts = [];
-    if (m.atk.level>0) parts.push(`攻${m.atk.level}级(+${m.atk.bonus})`);
-    if (m.spd.level>0) parts.push(`速${m.spd.level}级(+${m.spd.bonus}%)`);
-    if (m.spirit.level>0) parts.push(`灵${m.spirit.level}级(+${m.spirit.bonus})`);
+    if(m.atk.level>0) parts.push(`攻${m.atk.level}级(+${m.atk.bonus})`);
+    if(m.spd.level>0) parts.push(`速${m.spd.level}级(+${m.spd.bonus}%)`);
+    if(m.spirit.level>0) parts.push(`灵${m.spirit.level}级(+${m.spirit.bonus})`);
     document.getElementById('manualLevels').textContent = parts.length ? parts.join(' ') : '无';
     document.getElementById('logBox').innerHTML = state.logMessages.slice(-6).map(m=>'> '+m).join('<br>');
   }
@@ -906,7 +850,7 @@
 
   function init() {
     bindEvents();
-    if (!localStorage.getItem('xiuxian_final_v4')) { startNewGame(); }
+    if (!localStorage.getItem('xiuxian_final_v5')) { startNewGame(); }
     else { loadGame(); }
     switchScene('cave');
   }

@@ -3,122 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>仙途 · 界面优化版</title>
+    <title>仙途 · 寿元修复版</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; overflow: hidden; background: #0a0f1e; font-family: "Noto Serif SC", "KaiTi", serif; }
-        body { display: flex; justify-content: center; align-items: center; padding: 0.5rem; color: #e5d5b0; }
-        
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html, body { height:100%; overflow:hidden; background:#0a0f1e; font-family:"Noto Serif SC","KaiTi",serif; }
+        body { display:flex; justify-content:center; align-items:center; padding:0.5rem; color:#e5d5b0; }
         .game-container {
-            width: 100%; max-width: 500px; height: 100%; background: rgba(20, 25, 40, 0.95);
-            border: 1px solid #b89b6b; border-radius: 1.5rem; padding: 0.8rem;
-            display: flex; flex-direction: column; gap: 0.6rem;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            overflow: hidden;
+            width:100%; max-width:500px; height:100%; background:rgba(20,25,40,0.95); border:1px solid #b89b6b;
+            border-radius:1.5rem; padding:0.8rem; display:flex; flex-direction:column; gap:0.6rem;
+            box-shadow:0 0 30px rgba(0,0,0,0.8); overflow:hidden;
         }
-        
         @keyframes breakthroughFlash {
-            0% { box-shadow: 0 0 20px gold, inset 0 0 20px gold; }
-            50% { box-shadow: 0 0 60px orange, inset 0 0 60px orange; }
-            100% { box-shadow: 0 0 0px gold, inset 0 0 0px gold; }
+            0%{box-shadow:0 0 20px gold,inset 0 0 20px gold}
+            50%{box-shadow:0 0 60px orange,inset 0 0 60px orange}
+            100%{box-shadow:0 0 0px gold,inset 0 0 0px gold}
         }
-        .breakthrough-glow { animation: breakthroughFlash 1.5s ease-out; }
-        
-        /* 顶部标题栏 */
-        .header { text-align: center; font-size: 1.6rem; font-weight: bold; color: #ffd78b; line-height: 1.2; }
-        .player-name { text-align: center; font-size: 1.1rem; color: #fff; }
-        
-        /* 状态面板 - 整合修炼进度 */
+        .breakthrough-glow { animation:breakthroughFlash 1.5s ease-out; }
+        .header { text-align:center; font-size:1.6rem; font-weight:bold; color:#ffd78b; }
+        .player-name { text-align:center; font-size:1.1rem; color:#fff; }
         .stats-panel {
-            background: #1e1a24; border-radius: 1.2rem; padding: 0.6rem 0.8rem;
-            border: 1px solid #5e4e38; font-size: 0.8rem;
-            display: flex; flex-wrap: wrap; justify-content: space-around; gap: 0.3rem;
+            background:#1e1a24; border-radius:1.2rem; padding:0.6rem 0.8rem; border:1px solid #5e4e38;
+            font-size:0.8rem; display:flex; flex-wrap:wrap; justify-content:space-around; gap:0.3rem;
         }
-        .stat-item { display: flex; align-items: center; gap: 0.2rem; }
-        .stat-item span:last-child { color: #ffd78b; font-weight: bold; }
-        
-        /* 修炼进度条 */
+        .stat-item { display:flex; align-items:center; gap:0.2rem; }
+        .stat-item span:last-child { color:#ffd78b; font-weight:bold; }
         .cultivate-section {
-            width: 100%; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.2rem;
+            width:100%; display:flex; align-items:center; gap:0.5rem; margin-top:0.2rem;
         }
-        .cultivate-label { font-size: 0.75rem; color: #b7a17c; white-space: nowrap; }
-        .progress-bar {
-            flex: 1; height: 8px; background: #2d2a24; border-radius: 10px; overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%; background: linear-gradient(90deg, #d4af37, #f9e076);
-            width: 0%; transition: width 0.2s;
-        }
-        .cultivate-text { font-size: 0.7rem; color: #ffd78b; white-space: nowrap; }
-        
-        /* 场景切换栏 */
-        .scene-bar { display: flex; background: #1e1a24; border-radius: 1.2rem; padding: 0.2rem; border: 1px solid #6b5d47; flex-shrink: 0; }
+        .cultivate-label { font-size:0.75rem; color:#b7a17c; white-space:nowrap; }
+        .progress-bar { flex:1; height:8px; background:#2d2a24; border-radius:10px; overflow:hidden; }
+        .progress-fill { height:100%; background:linear-gradient(90deg,#d4af37,#f9e076); width:0%; transition:width 0.2s; }
+        .cultivate-text { font-size:0.7rem; color:#ffd78b; white-space:nowrap; }
+        .scene-bar { display:flex; background:#1e1a24; border-radius:1.2rem; padding:0.2rem; border:1px solid #6b5d47; flex-shrink:0; }
         .scene-btn {
-            background: transparent; border: none; color: #b7a17c; padding: 0.5rem 0.4rem;
-            border-radius: 1rem; font-weight: bold; font-size: 0.8rem; flex: 1;
-            text-align: center; cursor: pointer; touch-action: manipulation;
+            background:transparent; border:none; color:#b7a17c; padding:0.5rem 0.4rem; border-radius:1rem;
+            font-weight:bold; font-size:0.8rem; flex:1; text-align:center; cursor:pointer; touch-action:manipulation;
         }
-        .scene-btn.active { background: #4a3f2e; color: #ffe5a3; }
-        
-        /* 场景面板 - 统一高度，内部滚动 */
+        .scene-btn.active { background:#4a3f2e; color:#ffe5a3; }
         .panel {
-            background: #1b1e2b; border-radius: 1.2rem; padding: 0.8rem;
-            border: 1px solid #6b5d47; display: none; flex-direction: column; gap: 0.5rem;
-            flex: 1; min-height: 0; overflow-y: auto;
+            background:#1b1e2b; border-radius:1.2rem; padding:0.8rem; border:1px solid #6b5d47;
+            display:none; flex-direction:column; gap:0.5rem; flex:1; min-height:0; overflow-y:auto;
         }
-        .panel.active { display: flex; }
-        
-        /* 按钮样式 - 手机触摸优化 */
+        .panel.active { display:flex; }
         .btn {
-            background: #2a2235; border: 1px solid #7a6a4b; color: #f3e0b0;
-            padding: 0.7rem 1rem; border-radius: 1.5rem; font-weight: bold; font-size: 0.8rem;
-            cursor: pointer; min-width: 55px; text-align: center; touch-action: manipulation;
+            background:#2a2235; border:1px solid #7a6a4b; color:#f3e0b0; padding:0.7rem 1rem;
+            border-radius:1.5rem; font-weight:bold; font-size:0.8rem; cursor:pointer; min-width:55px;
+            text-align:center; touch-action:manipulation;
         }
-        .btn:active { background: #4f4233; border-color: #cfb67c; }
-        .btn.primary { background: #5e4c34; border-color: #e6b55a; }
-        .btn.danger { border-color: #b54a4a; color: #ffbcaf; }
-        .btn:disabled { opacity: 0.5; pointer-events: none; }
-        
-        /* 卡片样式 */
+        .btn:active { background:#4f4233; border-color:#cfb67c; }
+        .btn.primary { background:#5e4c34; border-color:#e6b55a; }
+        .btn.danger { border-color:#b54a4a; color:#ffbcaf; }
+        .btn:disabled { opacity:0.5; pointer-events:none; }
         .card {
-            background: #201c24; border-radius: 1rem; padding: 0.6rem 0.8rem;
-            border: 1px solid #7d5f3f; display: flex; justify-content: space-between;
-            align-items: center; flex-wrap: wrap; gap: 0.4rem; font-size: 0.8rem;
+            background:#201c24; border-radius:1rem; padding:0.6rem 0.8rem; border:1px solid #7d5f3f;
+            display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; font-size:0.8rem;
         }
-        
-        /* 日志框 - 固定在底部 */
         .log-box {
-            background: #0b0e14; border-radius: 0.8rem; padding: 0.5rem;
-            height: 90px; flex-shrink: 0; overflow-y: auto;
-            font-size: 0.75rem; color: #b9aa81; border: 1px solid #4f4532; line-height: 1.4;
+            background:#0b0e14; border-radius:0.8rem; padding:0.5rem; height:90px; flex-shrink:0;
+            overflow-y:auto; font-size:0.75rem; color:#b9aa81; border:1px solid #4f4532; line-height:1.4;
         }
-        
-        /* 事件面板 */
         .event-panel {
-            background: #2a2235; border-radius: 0.8rem; padding: 0.6rem;
-            border: 1px solid #b4944c; display: none; font-size: 0.8rem;
+            background:#2a2235; border-radius:0.8rem; padding:0.6rem; border:1px solid #b4944c;
+            display:none; font-size:0.8rem;
         }
-        .event-options { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.4rem; flex-wrap: wrap; }
-        
-        /* 弹窗 */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: #1e1a2b; border: 2px solid #c7a55b; border-radius: 1.5rem; padding: 1.5rem; text-align: center; min-width: 260px; }
-        .modal-box h3 { color: #ffd78b; font-size: 1rem; }
-        .modal-box input { padding: 0.5rem; border-radius: 1.2rem; border: 1px solid #c7a55b; background: #2a2230; color: #ffd78b; font-size: 0.9rem; text-align: center; width: 80%; margin: 0.4rem 0; }
-        .gender-option { font-size: 1.1rem; cursor: pointer; padding: 0.4rem 0.8rem; border-radius: 1rem; border: 2px solid transparent; display: inline-block; margin: 0 0.4rem; }
-        .gender-option.selected { border-color: #ffd700; background: rgba(255,215,0,0.2); }
-        .treasure-select { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.4rem 0; }
-        .treasure-item { background: #2a2235; border: 1px solid #7a6a4b; border-radius: 0.8rem; padding: 0.3rem 0.6rem; cursor: pointer; font-size: 0.75rem; }
-        .treasure-item.equipped { border-color: #ffd700; background: #4a3f2e; }
+        .event-options { display:flex; gap:0.4rem; justify-content:center; margin-top:0.4rem; flex-wrap:wrap; }
+        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:1000; }
+        .modal-box { background:#1e1a2b; border:2px solid #c7a55b; border-radius:1.5rem; padding:1.5rem; text-align:center; min-width:260px; }
+        .modal-box h3 { color:#ffd78b; font-size:1rem; }
+        .modal-box input { padding:0.5rem; border-radius:1.2rem; border:1px solid #c7a55b; background:#2a2230; color:#ffd78b; font-size:0.9rem; text-align:center; width:80%; margin:0.4rem 0; }
+        .gender-option { font-size:1.1rem; cursor:pointer; padding:0.4rem 0.8rem; border-radius:1rem; border:2px solid transparent; display:inline-block; margin:0 0.4rem; }
+        .gender-option.selected { border-color:#ffd700; background:rgba(255,215,0,0.2); }
+        .treasure-select { display:flex; flex-wrap:wrap; gap:0.3rem; margin:0.4rem 0; }
+        .treasure-item { background:#2a2235; border:1px solid #7a6a4b; border-radius:0.8rem; padding:0.3rem 0.6rem; cursor:pointer; font-size:0.75rem; }
+        .treasure-item.equipped { border-color:#ffd700; background:#4a3f2e; }
     </style>
 </head>
 <body>
 <div class="game-container" id="gameContainer">
-    <!-- 标题 -->
     <div class="header" id="realmDisplay">炼气期·前期</div>
     <div class="player-name" id="playerNameDisplay">无名修士</div>
-    
-    <!-- 状态面板 + 修炼进度 -->
     <div class="stats-panel" id="statsPanel">
         <div class="stat-item">灵力 <span id="spiritValue">100</span>/<span id="maxSpirit">100</span></div>
         <div class="stat-item">生命 <span id="hpValue">80</span>/<span id="maxHp">80</span></div>
@@ -128,15 +91,12 @@
         <div class="stat-item" id="ageStat">寿元 <span id="ageValue">20</span>/<span id="maxAgeDisplay">100</span></div>
         <div class="stat-item">灵根 <span id="rootDisplay">五灵根</span></div>
         <div class="stat-item">突破率 <span id="breakRateDisplay">15%</span></div>
-        <!-- 修炼进度条 -->
         <div class="cultivate-section">
             <span class="cultivate-label">修为</span>
             <div class="progress-bar"><div class="progress-fill" id="cultivateFill"></div></div>
             <span class="cultivate-text" id="progressText">0/60</span>
         </div>
     </div>
-    
-    <!-- 场景切换 -->
     <div class="scene-bar">
         <button class="scene-btn active" data-scene="cave">洞府</button>
         <button class="scene-btn" data-scene="sect">宗门</button>
@@ -144,7 +104,7 @@
         <button class="scene-btn" data-scene="market">坊市</button>
         <button class="scene-btn" data-scene="secret">秘境</button>
     </div>
-    
+
     <!-- 洞府面板 -->
     <div class="panel active" id="panelCave">
         <div style="display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center;">
@@ -180,7 +140,7 @@
             <button class="btn" id="renamePlayerBtn">改名</button>
         </div>
     </div>
-    
+
     <!-- 宗门面板 -->
     <div class="panel" id="panelSect">
         <div id="sectInfo" style="font-size:0.9rem;">散修</div>
@@ -191,7 +151,7 @@
             <button class="btn" id="sectGuardBtn" disabled>护法(30+10)</button>
         </div>
     </div>
-    
+
     <!-- 野外面板 -->
     <div class="panel" id="panelWild">
         <div class="card" id="monsterCard">
@@ -206,35 +166,30 @@
             <button class="btn" id="doubleAdventureBtn">云游x2</button>
         </div>
     </div>
-    
+
     <!-- 坊市面板 -->
     <div class="panel" id="panelMarket">
         <div class="card"><span>破境丹(+10%)<span id="breakPillUsed">0</span>/3</span><button class="btn" id="buyBreakPill">30灵石</button></div>
         <div class="card"><span>回灵丹(+40灵力)</span><button class="btn" id="buySpiritPill">15灵石</button></div>
-        <div class="card"><span>寿元果(寿限+8)</span><button class="btn" id="buyLifeFruit">40灵石</button></div>
+        <div class="card"><span>寿元果(寿限+8)</span><button class="btn" id="buyLifeFruit">500灵石</button></div>
         <div class="card"><span>药材x1</span><button class="btn" id="buyHerb">200灵石</button></div>
-        <div class="card"><span>攻击功法</span><button class="btn" id="buyAtkManual">50灵石</button></div>
-        <div class="card"><span>修炼功法</span><button class="btn" id="buySpdManual">50灵石</button></div>
-        <div class="card"><span>灵力功法</span><button class="btn" id="buySpiritManual">50灵石</button></div>
+        <div class="card"><span>攻击功法</span><button class="btn" id="buyAtkManual"><span id="atkManualPrice">50</span>灵石</button></div>
+        <div class="card"><span>修炼功法</span><button class="btn" id="buySpdManual"><span id="spdManualPrice">50</span>灵石</button></div>
+        <div class="card"><span>灵力功法</span><button class="btn" id="buySpiritManual"><span id="spiritManualPrice">50</span>灵石</button></div>
         <div class="card"><span>随机法宝</span><button class="btn" id="buyTreasure">50灵石</button></div>
     </div>
-    
+
     <!-- 秘境面板 -->
     <div class="panel" id="panelSecret">
         <div style="text-align:center;font-size:0.9rem;">秘境高风险高回报</div>
         <button class="btn danger" id="secretExploreBtn">探索秘境(20灵力)</button>
     </div>
-    
-    <!-- 事件面板 -->
+
     <div class="event-panel" id="eventPanel">
         <div id="eventDesc"></div>
         <div class="event-options" id="eventOptions"></div>
     </div>
-    
-    <!-- 日志框 -->
     <div class="log-box" id="logBox">> 踏入仙途...</div>
-    
-    <!-- 底部按钮 -->
     <div style="display:flex; justify-content:space-between; flex-shrink:0;">
         <button class="btn" id="saveBtn">保存</button>
         <button class="btn" id="resetBtn">重修</button>
@@ -244,7 +199,6 @@
 
 <script>
 (function(){
-    // ========== 数据定义 ==========
     const REALMS = [
         { name:"炼气期", attack:2, spiritMax:100, lifeBonus:20, hpBase:80, subCost:[60,100] },
         { name:"筑基期", attack:5, spiritMax:150, lifeBonus:120, hpBase:150, subCost:[200,320] },
@@ -293,6 +247,9 @@
         partner:null,
         treasures:[], equippedTreasureIndex:-1,
         manuals:{ atk:{level:0,bonus:0}, spd:{level:0,bonus:0}, spirit:{level:0,bonus:0} },
+        manualPrices:{ atk:50, spd:50, spirit:50 },
+        lifeFruitBonus:0,
+        ageReduction:0,       // 新增：累计寿命上限扣减
         flyTimeLeft:0,
         breakPillUsed:0, guardUsedTotal:0,
         logMessages:["踏入仙途..."], eventActive:false
@@ -300,7 +257,6 @@
 
     let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
-    // ========== 辅助函数 ==========
     function generateMonsters() {
         const templates = MONSTER_TEMPLATES[state.realmIndex];
         const count = 1 + Math.floor(Math.random() * 2);
@@ -311,7 +267,6 @@
             monsters.push({
                 name: REALMS[state.realmIndex].name + "·" + t.name,
                 hp: t.hp + state.realmIndex * 3,
-                maxHp: t.hp + state.realmIndex * 3,
                 reward: t.reward + state.realmIndex * 2,
                 attack: t.atk + state.realmIndex,
                 herbChance: t.herb
@@ -330,10 +285,8 @@
             document.getElementById('monsterReward').textContent = '0';
             return;
         }
-        const names = state.monsters.map(m => m.name).join('、');
-        const totalHp = state.monsters.reduce((s,m) => s + m.hp, 0);
-        document.getElementById('monsterName').textContent = names;
-        document.getElementById('monsterHp').textContent = totalHp;
+        document.getElementById('monsterName').textContent = state.monsters.map(m=>m.name).join('、');
+        document.getElementById('monsterHp').textContent = state.monsters.reduce((s,m)=>s+m.hp,0);
         document.getElementById('monsterReward').textContent = state.monsterReward;
     }
 
@@ -347,12 +300,17 @@
         atk += state.manuals.atk.bonus;
         state.baseAttack = Math.floor(atk);
         state.maxSpirit = realm.spiritMax + (equipped ? equipped.spirit : 0) + state.manuals.spirit.bonus;
-        state.maxAge = isFinite(realm.lifeBonus) ? 80 + realm.lifeBonus : Infinity;
+        // 核心修复：计算 maxAge 时减去累计扣减值
+        if (isFinite(realm.lifeBonus)) {
+            state.maxAge = 80 + realm.lifeBonus + (state.lifeFruitBonus || 0) - (state.ageReduction || 0);
+        } else {
+            state.maxAge = Infinity;
+        }
         state.maxHp = Math.floor(realm.hpBase * (1 + state.subRealm * 0.12));
         if (state.spirit > state.maxSpirit) state.spirit = state.maxSpirit;
         if (state.hp > state.maxHp) state.hp = state.maxHp;
-        if (!isFinite(state.maxAge)) { state.age = Math.min(state.age, state.maxAge); }
-        else if (state.age > state.maxAge) { state.age = state.maxAge; }
+        if (!isFinite(state.maxAge)) state.age = Math.min(state.age, state.maxAge);
+        else if (state.age > state.maxAge) state.age = state.maxAge;
     }
 
     function getEquippedTreasure() {
@@ -390,6 +348,7 @@
             return;
         }
         if (!isFinite(state.maxAge)) return;
+        state.ageReduction = (state.ageReduction || 0) + y;   // 记录扣减
         state.maxAge = Math.max(state.age, state.maxAge - y);
         if (state.age >= state.maxAge) { addLog("寿元枯竭，轮回重修。"); resetGame(true); }
     }
@@ -409,15 +368,14 @@
         return Math.floor((4 + state.realmIndex * 2.5) * (0.8 + Math.random() * 0.4) * getCultivateMultiplier());
     }
 
-    // ========== 弹窗 ==========
     function showModal(html) {
         hideModal();
-        const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
-        const box = document.createElement('div'); box.className = 'modal-box'; box.innerHTML = html;
+        const overlay = document.createElement('div'); overlay.className='modal-overlay';
+        const box = document.createElement('div'); box.className='modal-box'; box.innerHTML=html;
         overlay.appendChild(box);
         document.getElementById('modalContainer').appendChild(overlay);
     }
-    function hideModal() { document.getElementById('modalContainer').innerHTML = ''; }
+    function hideModal() { document.getElementById('modalContainer').innerHTML=''; }
 
     function startNewGame() {
         showModal(`
@@ -447,7 +405,7 @@
                 state.spiritualRoot = Object.keys(ROOTS)[Math.floor(Math.random()*5)];
                 state.baseBreakRate = 5 + Math.floor(Math.random()*16);
                 state.realmIndex = 0; state.subRealm = 0; state.cultivation = 0;
-                state.age = 20; state.maxAge = 100; state.hp = 80;
+                state.age = 20; state.ageReduction = 0; state.maxAge = 100; state.hp = 80;
                 hideModal();
                 generateMonsters(); recalcStats(); state.hp = state.maxHp;
                 updateUI(); saveGame();
@@ -508,19 +466,18 @@
         document.getElementById('confirmTreasureBtn').addEventListener('click', hideModal);
     }
 
-    // ========== 事件池（完整版） ==========
     const eventPool = {
         cultivate: [
-            { desc:"灵气逆乱，经脉刺痛", opts:[
+            { desc:"灵气逆乱", opts:[
                 { text:"强行运功(-20灵力,+40修为)", action:()=>{ if(state.spirit>=20){ state.spirit-=20; state.cultivation=Math.min(state.cultivation+40,getCurrentMaxCultivation()); addLog("运功成功"); } else addLog("灵力不足"); } },
                 { text:"静待平息", action:()=>addLog("放弃修炼") }
             ]},
             { desc:"识海浮现远古符文", opts:[
                 { text:"参悟(+60修为,寿限-2)", action:()=>{ state.cultivation=Math.min(state.cultivation+60,getCurrentMaxCultivation()); reduceMaxAge(2); addLog("参悟符文"); } },
-                { text:"记录后继续修炼", action:()=>{ state.cultivation=Math.min(state.cultivation+10,getCurrentMaxCultivation()); addLog("修为+10"); } }
+                { text:"记录后继续", action:()=>{ state.cultivation=Math.min(state.cultivation+10,getCurrentMaxCultivation()); addLog("修为+10"); } }
             ]},
             { desc:"天降灵雨", opts:[
-                { text:"全力吸收(+80修为)", action:()=>{ state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("修为大增"); } },
+                { text:"全力吸收(+80)", action:()=>{ state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("修为大增"); } },
                 { text:"小心提防(+20)", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("修为+20"); } }
             ]},
             { desc:"心魔幻化", opts:[
@@ -530,18 +487,6 @@
             { desc:"灵根异动", opts:[
                 { text:"引导(+100,灵根重置)", action:()=>{ state.spiritualRoot=Object.keys(ROOTS)[Math.floor(Math.random()*5)]; state.cultivation=Math.min(state.cultivation+100,getCurrentMaxCultivation()); recalcStats(); addLog("灵根重塑"); } },
                 { text:"压制(+20)", action:()=>{ state.cultivation=Math.min(state.cultivation+20,getCurrentMaxCultivation()); addLog("修为+20"); } }
-            ]},
-            { desc:"古籍残页", opts:[
-                { text:"修习(+70)", action:()=>{ state.cultivation=Math.min(state.cultivation+70,getCurrentMaxCultivation()); addLog("修习古籍"); } },
-                { text:"出售(灵石+30)", action:()=>{ state.stones+=30; addLog("灵石+30"); } }
-            ]},
-            { desc:"雷云凝聚", opts:[
-                { text:"提前渡劫(突破率+5%,寿限-3)", action:()=>{ state.breakBoost+=5; reduceMaxAge(3); addLog("天劫预兆"); } },
-                { text:"躲避", action:()=>addLog("继续修炼") }
-            ]},
-            { desc:"灵台清明", opts:[
-                { text:"深度感悟(+90)", action:()=>{ state.cultivation=Math.min(state.cultivation+90,getCurrentMaxCultivation()); addLog("感悟大道"); } },
-                { text:"浅尝(+30)", action:()=>{ state.cultivation=Math.min(state.cultivation+30,getCurrentMaxCultivation()); addLog("修为+30"); } }
             ]}
         ],
         wild: [
@@ -552,25 +497,13 @@
             ]},
             { desc:"废弃矿坑", opts:[
                 { text:"挖掘(+50灵石)", action:()=>{ state.stones+=50; addLog("灵石+50"); } },
-                { text:"深入(灵力-20,+80灵石)", action:()=>{ if(state.spirit>=20){ state.spirit-=20; state.stones+=80; addLog("深入矿坑"); } else addLog("灵力不足"); } }
-            ]},
-            { desc:"仙鹤引路", opts:[
-                { text:"跟随(进入秘境)", action:()=>{ secretExplore(); } },
-                { text:"不理", action:()=>addLog("仙鹤离去") }
-            ]},
-            { desc:"强盗拦路", opts:[
-                { text:"战斗(生命-20,+60灵石)", action:()=>{ state.hp=Math.max(0,state.hp-20); state.stones+=60; if(state.hp<=0) hpDeathPenalty(); addLog("击退强盗"); } },
-                { text:"交钱(-30灵石)", action:()=>{ if(state.stones>=30){ state.stones-=30; addLog("交钱保命"); } else addLog("灵石不足"); } }
+                { text:"深入(-20灵力,+80灵石)", action:()=>{ if(state.spirit>=20){ state.spirit-=20; state.stones+=80; addLog("深入矿坑"); } else addLog("灵力不足"); } }
             ]}
         ],
         sect: [
             { desc:"宗门大比", opts:[
                 { text:"参加(-15灵力)", action:()=>{ if(state.spirit<15) return; state.spirit-=15; if(Math.random()<0.6){ state.contribution+=5; state.stones+=20; addLog("大比获胜"); } else { state.spirit-=10; addLog("落败"); } } },
                 { text:"放弃", action:()=>addLog("弃权") }
-            ]},
-            { desc:"长老传功", opts:[
-                { text:"接受(+30)", action:()=>{ state.cultivation=Math.min(state.cultivation+30,getCurrentMaxCultivation()); addLog("传功"); } },
-                { text:"拒绝", action:()=>addLog("婉拒") }
             ]}
         ],
         secret: [
@@ -578,9 +511,13 @@
                 { text:"献祭(-30灵石,+100)", action:()=>{ if(state.stones>=30){ state.stones-=30; state.cultivation=Math.min(state.cultivation+100,getCurrentMaxCultivation()); addLog("献祭成功"); } else addLog("灵石不足"); } },
                 { text:"摧毁(+50灵石)", action:()=>{ state.stones+=50; addLog("摧毁祭坛"); } }
             ]},
-            { desc:"传送阵", opts:[
-                { text:"激活(-30灵力,+80)", action:()=>{ if(state.spirit>=30){ state.spirit-=30; state.cultivation=Math.min(state.cultivation+80,getCurrentMaxCultivation()); addLog("传送灵界"); } else addLog("灵力不足"); } },
-                { text:"离开", action:()=>addLog("离开") }
+            { desc:"参悟天机", opts:[
+                { text:"参悟(突破率+5%)", action:()=>{ state.breakBoost = Math.min(100, state.breakBoost+5); addLog("突破率+5%"); } },
+                { text:"放弃", action:()=>addLog("离开") }
+            ]},
+            { desc:"守护兽", opts:[
+                { text:"战斗(-15灵力)", action:()=>{ if(state.spirit<15) return; state.spirit-=15; state.hp=Math.max(0,state.hp-20); if(Math.random()<0.5){ state.stones+=60; addLog("击败守护兽"); } if(state.hp<=0) hpDeathPenalty(); } },
+                { text:"逃跑", action:()=>{ reduceMaxAge(4); addLog("逃跑，寿限-4"); } }
             ]}
         ],
         dual: [
@@ -610,11 +547,15 @@
         });
         document.getElementById('eventPanel').style.display = 'block';
     }
-
     function endEvent() { state.eventActive = false; document.getElementById('eventPanel').style.display = 'none'; updateUI(); }
 
-    // ========== 核心操作 ==========
+    function checkEventActive() {
+        if (state.eventActive) { addLog("请先处理当前事件"); return true; }
+        return false;
+    }
+
     function cultivate() {
+        if (checkEventActive()) return;
         if (state.spirit < 5) { addLog("灵力不足"); return; }
         const maxCul = getCurrentMaxCultivation();
         if (state.cultivation >= maxCul) { addLog("修为已满，请突破境界"); return; }
@@ -630,6 +571,7 @@
     }
 
     function subRealmBreak() {
+        if (checkEventActive()) return;
         if (state.subRealm >= 2) { addLog("已是后期，需渡劫突破大境界"); return; }
         const cost = getSubRealmCost();
         if (state.cultivation < cost) { addLog(`需要${cost}修为突破小境界`); return; }
@@ -640,6 +582,7 @@
     }
 
     function breakthrough() {
+        if (checkEventActive()) return;
         if (state.subRealm < 2) { addLog("需达到后期方可渡劫大境界"); return; }
         if (state.realmIndex >= REALMS.length-1) { addLog("已达飞升境"); return; }
         const needed = getBreakNeed();
@@ -651,6 +594,7 @@
             state.realmIndex++; state.subRealm = 0;
             state.usedGuardThisRealm = false;
             state.breakPillUsed = 0; state.guardUsedTotal = 0;
+            state.ageReduction = 0;  // 突破时重置寿元扣减
             if (state.realmIndex === 6) state.flyTimeLeft = 1000;
             state.baseBreakRate = 5 + Math.floor(Math.random() * 16);
             recalcStats(); state.hp = state.maxHp;
@@ -673,6 +617,7 @@
     }
 
     function meditate() {
+        if (checkEventActive()) return;
         let rec = 5+Math.floor(Math.random()*10);
         state.spirit = Math.min(state.maxSpirit, state.spirit+rec);
         state.hp = Math.min(state.maxHp, state.hp+Math.floor(state.maxHp*0.05));
@@ -680,6 +625,7 @@
     }
 
     function heal() {
+        if (checkEventActive()) return;
         if (state.stones < 10) { addLog("灵石不足"); return; }
         state.stones -= 10;
         state.spirit = Math.min(state.maxSpirit, state.spirit+Math.floor(state.maxSpirit*0.4+15));
@@ -688,12 +634,14 @@
     }
 
     function fullHeal() {
+        if (checkEventActive()) return;
         if (state.stones < 20) { addLog("灵石不足"); return; }
         state.stones -= 20; state.spirit = state.maxSpirit; state.hp = state.maxHp;
         addLog("回满灵力与生命"); consumeYears(0.7); updateUI();
     }
 
     function alchemy() {
+        if (checkEventActive()) return;
         if (state.stones < 18 || state.herb < 2) { addLog("需18灵石+2药材"); return; }
         const maxCul = getCurrentMaxCultivation();
         if (state.cultivation >= maxCul) { addLog("修为已满，请突破境界"); return; }
@@ -707,6 +655,7 @@
     }
 
     function dualCultivate() {
+        if (checkEventActive()) return;
         if (!state.partner) { addLog("没有道侣"); return; }
         if (state.spirit < 15) { addLog("灵力不足"); return; }
         const maxCul = getCurrentMaxCultivation();
@@ -726,6 +675,7 @@
     }
 
     function askMaster() {
+        if (checkEventActive()) return;
         if (!state.hasMaster) { addLog("无师尊"); return; }
         if (state.stones < 20) { addLog("灵石不足"); return; }
         const maxCul = getCurrentMaxCultivation();
@@ -741,6 +691,7 @@
     }
 
     function sectTask() {
+        if (checkEventActive()) return;
         if (!state.sectName) { addLog("无宗门"); return; }
         if (state.spirit < 10) { addLog("灵力不足"); return; }
         state.spirit -= 10;
@@ -751,17 +702,20 @@
     }
 
     function sectSalary() {
+        if (checkEventActive()) return;
         if (state.contribution < 5) { addLog("贡献不足"); return; }
         state.contribution -= 5; state.stones += 15+state.realmIndex*6; addLog("领取俸禄"); updateUI();
     }
 
     function sectGuard() {
+        if (checkEventActive()) return;
         if (!state.sectName||state.guardUsedTotal>=1||state.stones<30||state.contribution<10) return;
         state.stones-=30; state.contribution-=10; state.guardUsedTotal=1;
-        state.breakBoost+=10; addLog("护法加持，突破率+10%"); updateUI();
+        state.breakBoost = Math.min(100, state.breakBoost+10); addLog("护法加持，突破率+10%"); updateUI();
     }
 
     function attackMonster() {
+        if (checkEventActive()) return;
         if (!state.monsters.length) { generateMonsters(); return; }
         if (state.spirit < 3) { addLog("灵力不足"); return; }
         state.spirit -= 3;
@@ -784,10 +738,9 @@
     }
 
     function adventure(double=false) {
-        if (state.eventActive) return;
-        let cost = double?15:8;
-        if (state.spirit < cost) { addLog("灵力不足"); return; }
-        state.spirit -= cost;
+        if (checkEventActive()) return;
+        if (state.spirit < (double?15:8)) { addLog("灵力不足"); return; }
+        state.spirit -= double?15:8;
         let logs = [];
         for (let i=0;i<(double?2:1);i++) {
             let r = Math.random();
@@ -819,6 +772,7 @@
     }
 
     function secretExplore() {
+        if (checkEventActive()) return;
         if (state.spirit < 20) { addLog("灵力不足"); return; }
         state.spirit -= 20;
         let r = Math.random();
@@ -833,14 +787,13 @@
         updateUI();
     }
 
-    // ========== 坊市 ==========
-    function buyBreakPill(){ if(state.stones<30||state.breakPillUsed>=3) return; state.stones-=30; state.breakPillUsed++; state.breakBoost=Math.min(50,state.breakBoost+10); addLog("破境丹，突破率+10%"); updateUI(); }
+    function buyBreakPill(){ if(state.stones<30||state.breakPillUsed>=3) return; state.stones-=30; state.breakPillUsed++; state.breakBoost = Math.min(100, state.breakBoost+10); addLog("破境丹，突破率+10%"); updateUI(); }
     function buySpiritPill(){ if(state.stones<15) return; state.stones-=15; state.spirit=Math.min(state.maxSpirit,state.spirit+40); addLog("回灵丹"); updateUI(); }
-    function buyLifeFruit(){ if(state.stones<40) return; state.stones-=40; state.maxAge+=8; addLog("寿元果，寿限+8"); updateUI(); }
+    function buyLifeFruit(){ if(state.stones<500) return; state.stones-=500; state.lifeFruitBonus = (state.lifeFruitBonus||0)+8; recalcStats(); addLog("寿元上限+8"); updateUI(); }
     function buyHerb(){ if(state.stones<200) return; state.stones-=200; state.herb++; addLog("药材+1"); updateUI(); }
-    function buyAtkManual(){ if(state.stones<50) return; state.stones-=50; let a=2+Math.floor(Math.random()*5); state.manuals.atk.level++; state.manuals.atk.bonus+=a; recalcStats(); addLog(`攻击功法+${a}`); updateUI(); }
-    function buySpdManual(){ if(state.stones<50) return; state.stones-=50; let a=2+Math.floor(Math.random()*4); state.manuals.spd.level++; state.manuals.spd.bonus+=a; recalcStats(); addLog(`修炼功法+${a}%`); updateUI(); }
-    function buySpiritManual(){ if(state.stones<50) return; state.stones-=50; let a=5+Math.floor(Math.random()*8); state.manuals.spirit.level++; state.manuals.spirit.bonus+=a; recalcStats(); addLog(`灵力功法+${a}`); updateUI(); }
+    function buyAtkManual(){ let p=state.manualPrices.atk; if(state.stones<p) return; state.stones-=p; state.manualPrices.atk+=25; let a=2+Math.floor(Math.random()*5); state.manuals.atk.level++; state.manuals.atk.bonus+=a; recalcStats(); addLog(`攻击功法+${a} (下次${state.manualPrices.atk}灵石)`); updateUI(); }
+    function buySpdManual(){ let p=state.manualPrices.spd; if(state.stones<p) return; state.stones-=p; state.manualPrices.spd+=25; let a=2+Math.floor(Math.random()*4); state.manuals.spd.level++; state.manuals.spd.bonus+=a; recalcStats(); addLog(`修炼功法+${a}% (下次${state.manualPrices.spd}灵石)`); updateUI(); }
+    function buySpiritManual(){ let p=state.manualPrices.spirit; if(state.stones<p) return; state.stones-=p; state.manualPrices.spirit+=25; let a=5+Math.floor(Math.random()*8); state.manuals.spirit.level++; state.manuals.spirit.bonus+=a; recalcStats(); addLog(`灵力功法+${a} (下次${state.manualPrices.spirit}灵石)`); updateUI(); }
     function buyTreasure(){ if(state.stones<50) return; state.stones-=50; const t=TREASURES[Math.floor(Math.random()*TREASURES.length)]; addTreasure(t); }
 
     function renamePlayer() {
@@ -868,22 +821,23 @@
         document.querySelector(`.scene-btn[data-scene="${scene}"]`).classList.add('active');
         document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
         document.getElementById('panel'+scene.charAt(0).toUpperCase()+scene.slice(1)).classList.add('active');
-        document.getElementById('eventPanel').style.display = 'none';
-        state.eventActive = false;
     }
 
-    function saveGame() { try{ localStorage.setItem('xiuxian_v7', JSON.stringify(state)); } catch(e){} }
+    function saveGame() { try{ localStorage.setItem('xiuxian_v10', JSON.stringify(state)); } catch(e){} }
     function loadGame() {
         try {
-            const s = localStorage.getItem('xiuxian_v7');
+            const s = localStorage.getItem('xiuxian_v10');
             if(s) {
                 state = JSON.parse(s);
                 if(!state.treasures) state.treasures=[];
                 if(state.equippedTreasureIndex===undefined) state.equippedTreasureIndex=-1;
                 if(!state.manuals?.atk) state.manuals={atk:{level:0,bonus:0},spd:{level:0,bonus:0},spirit:{level:0,bonus:0}};
+                if(!state.manualPrices) state.manualPrices={atk:50,spd:50,spirit:50};
+                if(state.ageReduction===undefined) state.ageReduction=0;
                 if(state.baseBreakRate===undefined) state.baseBreakRate=15;
                 if(state.breakPillUsed===undefined) state.breakPillUsed=0;
                 if(state.guardUsedTotal===undefined) state.guardUsedTotal=0;
+                if(state.lifeFruitBonus===undefined) state.lifeFruitBonus=0;
                 if(!state.gender) state.gender='male';
                 if(state.realmIndex<0||state.realmIndex>=REALMS.length) { state.realmIndex=0; state.subRealm=0; }
                 if(!state.monsters?.length) generateMonsters();
@@ -945,6 +899,11 @@
         if(m.spd.level>0) parts.push(`速${m.spd.level}级(+${m.spd.bonus}%)`);
         if(m.spirit.level>0) parts.push(`灵${m.spirit.level}级(+${m.spirit.bonus})`);
         document.getElementById('manualLevels').textContent = parts.length?parts.join(' '):'无';
+        
+        document.getElementById('atkManualPrice').textContent = state.manualPrices.atk;
+        document.getElementById('spdManualPrice').textContent = state.manualPrices.spd;
+        document.getElementById('spiritManualPrice').textContent = state.manualPrices.spirit;
+        
         document.getElementById('logBox').innerHTML = state.logMessages.slice(-6).map(m=>'> '+m).join('<br>');
     }
 
@@ -983,7 +942,7 @@
 
     function init() {
         bindEvents();
-        if (!localStorage.getItem('xiuxian_v7')) { startNewGame(); }
+        if (!localStorage.getItem('xiuxian_v10')) { startNewGame(); }
         else { loadGame(); }
         switchScene('cave');
     }
